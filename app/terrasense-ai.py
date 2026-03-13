@@ -292,3 +292,38 @@ if st.button("Analyze Farm"):
         file_name="terrasense_farm_report.pdf",
         mime="application/pdf"
     )
+    st.download_button(
+    label="Download Farm Report (PDF)",
+    data=buffer.getvalue(),
+    file_name="terrasense_farm_report.pdf",
+    mime="application/pdf"
+)
+    # ---------------------------
+# FARMER REGISTRATION
+# ---------------------------
+
+st.divider()
+st.subheader("👩‍🌾 Farmer Registration")
+
+farmer_name = st.text_input("Farmer Name")
+farm_location = st.text_input("Farm Location")
+crop_type = st.text_input("Crop Grown")
+
+if st.button("Register Farmer"):
+
+    import pandas as pd
+
+    new_data = pd.DataFrame(
+        [[farmer_name, farm_location, crop_type]],
+        columns=["Name", "Location", "Crop"]
+    )
+
+    try:
+        df = pd.read_csv("farmers.csv")
+        df = pd.concat([df, new_data], ignore_index=True)
+    except:
+        df = new_data
+
+    df.to_csv("farmers.csv", index=False)
+
+    st.success("Farmer registered successfully!")
