@@ -15,6 +15,15 @@ st.set_page_config(
     layout="wide"
 )
 
+ # WEATHER DETAILS
+    # ---------------------------
+
+    with st.expander("Advanced Weather Details"):
+        st.write("Temperature:", temperature)
+        st.write("Humidity:", humidity)
+
+            # ---------------------------
+
 # ---------------------------
 # SIDEBAR METRICS
 # ---------------------------
