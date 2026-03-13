@@ -125,7 +125,7 @@ API_KEY = st.secrets["OPENWEATHER_KEY"]
 # ANALYZE FARM
 # ---------------------------
 
-if st.button("Analyze Farm"):
+if st.button("Analyze Farm", key="analyze_button"):
 
     st.divider()
 
