@@ -285,18 +285,13 @@ if st.button("Analyze Farm"):
 
     doc = SimpleDocTemplate(buffer)
     doc.build(elements)
-
-    st.download_button(
-        label="Download Farm Report (PDF)",
-        data=buffer.getvalue(),
-        file_name="terrasense_farm_report.pdf",
-        mime="application/pdf"
-    )
-    st.download_button(
+    
+st.download_button(
     label="Download Farm Report (PDF)",
     data=buffer.getvalue(),
     file_name="terrasense_farm_report.pdf",
-    mime="application/pdf"
+    mime="application/pdf",
+    key="farm_report_download"
 )
     # ---------------------------
 # FARMER REGISTRATION
