@@ -122,19 +122,7 @@ st.write("Current Season:", season)
 
 API_KEY = st.secrets["OPENWEATHER_KEY"]
 # get weather data
-weather_data = requests.get(weather_url).json()
 
-temperature = weather_data["main"]["temp"]
-humidity = weather_data["main"]["humidity"]
-
-# show quick weather metrics
-colW1, colW2 = st.columns(2)
-colW1.metric("Temperature", f"{temperature} °C")
-colW2.metric("Humidity", f"{humidity} %")
-
-# then continue forecast analysis
-forecast_url = ...
-forecast_data = ...
 # ---------------------------
 # ANALYZE FARM
 # ---------------------------
