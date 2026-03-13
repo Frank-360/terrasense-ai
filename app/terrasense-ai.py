@@ -7,8 +7,13 @@ from streamlit_geolocation import streamlit_geolocation
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from io import BytesIO
-from auth.login import login_user
 from auth.register import register_user
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
+from auth.login import login_user
 
 st.set_page_config(
     page_title="TerraSense AI",
