@@ -128,6 +128,14 @@ API_KEY = st.secrets["OPENWEATHER_KEY"]
 if st.button("Analyze Farm", key="analyze_button"):
 
     st.divider()
+    
+    st.download_button(
+    label="Download Farm Report (PDF)",
+    data=buffer.getvalue(),
+    file_name="terrasense_farm_report.pdf",
+    mime="application/pdf",
+    key="farm_report_download"
+)
 
     # CURRENT WEATHER
 
@@ -286,13 +294,7 @@ if st.button("Analyze Farm", key="analyze_button"):
     doc = SimpleDocTemplate(buffer)
     doc.build(elements)
     
-st.download_button(
-    label="Download Farm Report (PDF)",
-    data=buffer.getvalue(),
-    file_name="terrasense_farm_report.pdf",
-    mime="application/pdf",
-    key="farm_report_download"
-)
+
     # ---------------------------
 # FARMER REGISTRATION
 # ---------------------------
