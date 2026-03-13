@@ -8,10 +8,6 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from io import BytesIO
 
-import streamlit as st
-from auth.login import login_user
-from auth.register import register_user
-
 st.set_page_config(
     page_title="TerraSense AI",
     page_icon="🌱",
