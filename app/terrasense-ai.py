@@ -7,7 +7,6 @@ from streamlit_geolocation import streamlit_geolocation
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from io import BytesIO
-from auth.register import register_user
 import sys
 import os
 
