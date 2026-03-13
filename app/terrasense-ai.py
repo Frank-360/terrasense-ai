@@ -15,16 +15,7 @@ st.set_page_config(
     layout="wide"
 )
 
- # WEATHER DETAILS
-    # ---------------------------
 
-    with st.expander("Advanced Weather Details"):
-        st.write("Temperature:", temperature)
-        st.write("Humidity:", humidity)
-
-            # ---------------------------
-
-# ---------------------------
 # SIDEBAR METRICS
 # ---------------------------
 
@@ -130,7 +121,20 @@ st.write("Current Season:", season)
 # ---------------------------
 
 API_KEY = st.secrets["OPENWEATHER_KEY"]
+# get weather data
+weather_data = requests.get(weather_url).json()
 
+temperature = weather_data["main"]["temp"]
+humidity = weather_data["main"]["humidity"]
+
+# show quick weather metrics
+colW1, colW2 = st.columns(2)
+colW1.metric("Temperature", f"{temperature} °C")
+colW2.metric("Humidity", f"{humidity} %")
+
+# then continue forecast analysis
+forecast_url = ...
+forecast_data = ...
 # ---------------------------
 # ANALYZE FARM
 # ---------------------------
@@ -174,6 +178,36 @@ if st.button("Analyze Farm"):
 
     st.warning(advice)
 
+
+st.subheader("Next Rain Prediction")
+
+if time_to_rain is not None:
+
+    if time_to_rain <= 3:
+        st.success("Rain expected within 3 hours")
+
+    elif time_to_rain <= 24:
+        st.success(f"Rain expected in {time_to_rain:.0f} hours")
+
+    elif time_to_rain <= 72:
+        st.info(f"Rain expected in {time_to_rain/24:.1f} days")
+
+    else:
+        st.warning("Rain is several days away")
+
+else:
+    st.error("No significant rain expected in the next 5 days")
+
+# ---------------------------
+# WEATHER DETAILS
+# ---------------------------
+with st.expander("Advanced Weather Details"):
+    st.write("Temperature:", temperature, "°C")
+    st.write("Humidity:", humidity, "%")
+    st.write("Total Rainfall Forecast (5 days):", f"{total_rain:.2f} mm")
+    st.write("Season:", season)
+    st.write("Coordinates:", f"{lat:.4f}, {lon:.4f}")
+    
     # ---------------------------
     # GENERATE REPORT
     # ---------------------------
