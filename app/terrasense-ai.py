@@ -7,6 +7,13 @@ from streamlit_geolocation import streamlit_geolocation
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from io import BytesIO
+import pandas as pd
+
+try:
+    df = pd.read_csv("farmers.csv")
+    st.sidebar.metric("Registered Farmers", len(df))
+except:
+    st.sidebar.metric("Registered Farmers", 0)
 
 st.set_page_config(
     page_title="TerraSense AI",
@@ -29,13 +36,22 @@ st.subheader("Farm Setup")
 
 col1, col2 = st.columns([1,2])
 
-with col1:
-    crop = st.selectbox(
-        "Select Crop Type",
-        ["Maize", "Rice", "Cassava", "Millet"]
-    )
+st.set_page_config(
+    page_title="TerraSense AI",
+    page_icon="🌱",
+    layout="wide"
+)
 
-    st.write("Selected Crop:", crop)
+# ---------------------------
+# SIDEBAR FARM SETUP
+# ---------------------------
+
+st.sidebar.title("🌱 Farm Setup")
+
+crop = st.sidebar.selectbox(
+    "Select Crop",
+    ["Maize","Rice","Cassava","Millet"]
+)
 
 # ---------------------------
 # GPS DETECTION
