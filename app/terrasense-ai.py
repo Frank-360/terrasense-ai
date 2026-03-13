@@ -7,11 +7,6 @@ from streamlit_geolocation import streamlit_geolocation
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from io import BytesIO
-import streamlit as st
-import sys
-import os
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from auth.login import login_user
 from auth.register import register_user
