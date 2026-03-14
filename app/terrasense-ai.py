@@ -8,6 +8,7 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from io import BytesIO
 import pandas as pd
+import os
 
 st.set_page_config(
     page_title="TerraSense AI",
@@ -15,40 +16,40 @@ st.set_page_config(
     layout="wide"
 )
 
-
-# SIDEBAR METRICS
+# ---------------------------
+# SIDEBAR
 # ---------------------------
 
 st.sidebar.title("🌱 Farm Setup")
 
 crop = st.sidebar.selectbox(
     "Select Crop",
-    ["Maize","Rice","Cassava","Millet"]
+    ["Maize", "Rice", "Cassava", "Millet"]
 )
 
 # Farmers registered
-try:
+if os.path.exists("farmers.csv"):
     df = pd.read_csv("farmers.csv")
     farmers_registered = len(df)
-except:
+else:
     farmers_registered = 0
 
 st.sidebar.metric("Farmers Registered", farmers_registered)
 
 # Farms analyzed
-try:
+if os.path.exists("analysis_count.txt"):
     with open("analysis_count.txt","r") as f:
         farms_analyzed = int(f.read())
-except:
+else:
     farms_analyzed = 0
 
 st.sidebar.metric("Farms Analyzed", farms_analyzed)
 
 # Reports generated
-try:
+if os.path.exists("report_count.txt"):
     with open("report_count.txt","r") as f:
         reports_generated = int(f.read())
-except:
+else:
     reports_generated = 0
 
 st.sidebar.metric("Reports Generated", reports_generated)
@@ -59,10 +60,6 @@ st.sidebar.metric("Reports Generated", reports_generated)
 
 st.title("TerraSense AI – Smart Farm Advisor 🌱")
 st.subheader("Farm Irrigation Advisor")
-
-# ---------------------------
-# FARM SETUP
-# ---------------------------
 
 col1, col2 = st.columns([1,2])
 
@@ -121,7 +118,14 @@ st.write("Current Season:", season)
 # ---------------------------
 
 API_KEY = st.secrets["OPENWEATHER_KEY"]
-# get weather data
+
+# Initialize variables
+temperature = None
+humidity = None
+total_rain = 0
+time_to_rain = None
+crop_status = ""
+advice = ""
 
 # ---------------------------
 # ANALYZE FARM
@@ -129,7 +133,6 @@ API_KEY = st.secrets["OPENWEATHER_KEY"]
 
 if st.button("Analyze Farm"):
 
-    # update analysis counter
     farms_analyzed += 1
     with open("analysis_count.txt","w") as f:
         f.write(str(farms_analyzed))
@@ -146,56 +149,74 @@ if st.button("Analyze Farm"):
     total_rain = 0
 
     for entry in forecast_data["list"]:
+
         rain = entry.get("rain",{}).get("3h",0)
         total_rain += rain
 
-    # irrigation logic
+        if rain > 0 and time_to_rain is None:
+            forecast_time = datetime.datetime.fromtimestamp(entry["dt"])
+            now = datetime.datetime.now()
+            time_to_rain = (forecast_time - now).total_seconds() / 3600
+
+    # Irrigation Logic
     if total_rain < 5 and humidity < 60:
         crop_status = "High Water Stress"
         advice = "Irrigate immediately"
+
     elif total_rain < 10:
         crop_status = "Moderate Water Stress"
         advice = "Irrigate within 2–3 days"
+
     else:
         crop_status = "Healthy"
         advice = "No irrigation needed"
 
+    # ---------------------------
+    # RESULTS
+    # ---------------------------
+
     st.subheader("Farm Analysis Results")
+
     st.metric("Crop Status", crop_status)
     st.metric("5-Day Rainfall Forecast", f"{total_rain:.2f} mm")
 
     st.warning(advice)
 
+    # ---------------------------
+    # RAIN PREDICTION
+    # ---------------------------
 
-st.subheader("Next Rain Prediction")
+    st.subheader("Next Rain Prediction")
 
-if time_to_rain is not None:
+    if time_to_rain is not None:
 
-    if time_to_rain <= 3:
-        st.success("Rain expected within 3 hours")
+        if time_to_rain <= 3:
+            st.success("Rain expected within 3 hours")
 
-    elif time_to_rain <= 24:
-        st.success(f"Rain expected in {time_to_rain:.0f} hours")
+        elif time_to_rain <= 24:
+            st.success(f"Rain expected in {time_to_rain:.0f} hours")
 
-    elif time_to_rain <= 72:
-        st.info(f"Rain expected in {time_to_rain/24:.1f} days")
+        elif time_to_rain <= 72:
+            st.info(f"Rain expected in {time_to_rain/24:.1f} days")
+
+        else:
+            st.warning("Rain is several days away")
 
     else:
-        st.warning("Rain is several days away")
+        st.error("No significant rain expected in the next 5 days")
 
-else:
-    st.error("No significant rain expected in the next 5 days")
+    # ---------------------------
+    # ADVANCED WEATHER
+    # ---------------------------
 
-# ---------------------------
-# WEATHER DETAILS
-# ---------------------------
-with st.expander("Advanced Weather Details"):
-    st.write("Temperature:", temperature, "°C")
-    st.write("Humidity:", humidity, "%")
-    st.write("Total Rainfall Forecast (5 days):", f"{total_rain:.2f} mm")
-    st.write("Season:", season)
-    st.write("Coordinates:", f"{lat:.4f}, {lon:.4f}")
-    
+    with st.expander("Advanced Weather Details"):
+
+        st.write("Temperature:", temperature, "°C")
+        st.write("Humidity:", humidity, "%")
+        st.write("Total Rainfall Forecast:", f"{total_rain:.2f} mm")
+        st.write("Season:", season)
+        st.write("Coordinates:", f"{lat:.4f}, {lon:.4f}")
+
     # ---------------------------
     # GENERATE REPORT
     # ---------------------------
@@ -217,7 +238,6 @@ with st.expander("Advanced Weather Details"):
     doc = SimpleDocTemplate(buffer)
     doc.build(elements)
 
-    # update report counter
     reports_generated += 1
     with open("report_count.txt","w") as f:
         f.write(str(reports_generated))
@@ -247,10 +267,10 @@ if st.button("Register Farmer"):
         columns=["Name","Location","Crop"]
     )
 
-    try:
+    if os.path.exists("farmers.csv"):
         df = pd.read_csv("farmers.csv")
         df = pd.concat([df,new_data],ignore_index=True)
-    except:
+    else:
         df = new_data
 
     df.to_csv("farmers.csv",index=False)
