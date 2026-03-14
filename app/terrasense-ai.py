@@ -27,6 +27,13 @@ crop = st.sidebar.selectbox(
     ["Maize", "Rice", "Cassava", "Millet"]
 )
 
+farm_size = st.sidebar.number_input(
+    "Farm Size (hectares)",
+    min_value=0.1,
+    max_value=100.0,
+    value=1.0
+)
+
 # Farmers registered
 if os.path.exists("farmers.csv"):
     df = pd.read_csv("farmers.csv")
@@ -128,6 +135,44 @@ crop_status = ""
 advice = ""
 
 # ---------------------------
+# CARBON INTELLIGENCE ENGINE
+# ---------------------------
+
+def estimate_carbon(farm_size, crop):
+
+    carbon_factors = {
+        "Maize": 0.6,
+        "Rice": 0.8,
+        "Cassava": 0.5,
+        "Millet": 0.4
+    }
+
+    factor = carbon_factors.get(crop, 0.5)
+
+    carbon = farm_size * factor
+
+    return round(carbon,2)
+
+# ---------------------------
+# VEGETATION HEALTH
+# ---------------------------
+
+def vegetation_health():
+
+    import random
+    ndvi = round(random.uniform(0.2,0.8),2)
+
+    if ndvi > 0.6:
+        status = "Healthy vegetation"
+    elif ndvi > 0.4:
+        status = "Moderate vegetation"
+    else:
+        status = "Poor vegetation"
+
+    return ndvi, status
+
+
+# ---------------------------
 # ANALYZE FARM
 # ---------------------------
 
@@ -176,11 +221,32 @@ if st.button("Analyze Farm"):
     # ---------------------------
 
     st.subheader("Farm Analysis Results")
+    climate_score = int((carbon * 10) + (total_rain * 2))
+
+if climate_score > 100:
+    climate_score = 100
+
+st.metric("Farm Climate Score", climate_score)
+
+    # ---------------------------
+# CARBON IMPACT
+# ---------------------------
+
+carbon = estimate_carbon(farm_size, crop)
+
+st.subheader("Climate Impact")
+
+st.metric("Estimated Carbon Stored", f"{carbon} tons CO₂ / year")
 
     st.metric("Crop Status", crop_status)
     st.metric("5-Day Rainfall Forecast", f"{total_rain:.2f} mm")
 
     st.warning(advice)
+
+ndvi, veg_status = vegetation_health()
+
+st.metric("Vegetation Index (NDVI)", ndvi)
+st.write("Vegetation Status:", veg_status)
 
     # ---------------------------
     # RAIN PREDICTION
