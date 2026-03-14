@@ -9,6 +9,7 @@ from reportlab.lib.styles import getSampleStyleSheet
 from io import BytesIO
 import pandas as pd
 import os
+import random
 
 st.set_page_config(
     page_title="TerraSense AI",
@@ -126,16 +127,8 @@ st.write("Current Season:", season)
 
 API_KEY = st.secrets["OPENWEATHER_KEY"]
 
-# Initialize variables
-temperature = None
-humidity = None
-total_rain = 0
-time_to_rain = None
-crop_status = ""
-advice = ""
-
 # ---------------------------
-# CARBON INTELLIGENCE ENGINE
+# CARBON ENGINE
 # ---------------------------
 
 def estimate_carbon(farm_size, crop):
@@ -159,7 +152,6 @@ def estimate_carbon(farm_size, crop):
 
 def vegetation_health():
 
-    import random
     ndvi = round(random.uniform(0.2,0.8),2)
 
     if ndvi > 0.6:
@@ -192,6 +184,7 @@ if st.button("Analyze Farm"):
     forecast_data = requests.get(forecast_url).json()
 
     total_rain = 0
+    time_to_rain = None
 
     for entry in forecast_data["list"]:
 
@@ -203,7 +196,10 @@ if st.button("Analyze Farm"):
             now = datetime.datetime.now()
             time_to_rain = (forecast_time - now).total_seconds() / 3600
 
-    # Irrigation Logic
+    # ---------------------------
+    # IRRIGATION LOGIC
+    # ---------------------------
+
     if total_rain < 5 and humidity < 60:
         crop_status = "High Water Stress"
         advice = "Irrigate immediately"
@@ -221,32 +217,40 @@ if st.button("Analyze Farm"):
     # ---------------------------
 
     st.subheader("Farm Analysis Results")
-    climate_score = int((carbon * 10) + (total_rain * 2))
-
-if climate_score > 100:
-    climate_score = 100
-
-st.metric("Farm Climate Score", climate_score)
-
-    # ---------------------------
-# CARBON IMPACT
-# ---------------------------
-
-carbon = estimate_carbon(farm_size, crop)
-
-st.subheader("Climate Impact")
-
-st.metric("Estimated Carbon Stored", f"{carbon} tons CO₂ / year")
 
     st.metric("Crop Status", crop_status)
     st.metric("5-Day Rainfall Forecast", f"{total_rain:.2f} mm")
 
     st.warning(advice)
 
-ndvi, veg_status = vegetation_health()
+    # ---------------------------
+    # CARBON IMPACT
+    # ---------------------------
 
-st.metric("Vegetation Index (NDVI)", ndvi)
-st.write("Vegetation Status:", veg_status)
+    carbon = estimate_carbon(farm_size, crop)
+
+    st.subheader("Climate Impact")
+    st.metric("Estimated Carbon Stored", f"{carbon} tons CO₂ / year")
+
+    # ---------------------------
+    # VEGETATION HEALTH
+    # ---------------------------
+
+    ndvi, veg_status = vegetation_health()
+
+    st.metric("Vegetation Index (NDVI)", ndvi)
+    st.write("Vegetation Status:", veg_status)
+
+    # ---------------------------
+    # CLIMATE SCORE
+    # ---------------------------
+
+    climate_score = int((carbon * 10) + (total_rain * 2))
+
+    if climate_score > 100:
+        climate_score = 100
+
+    st.metric("Farm Climate Score", climate_score)
 
     # ---------------------------
     # RAIN PREDICTION
