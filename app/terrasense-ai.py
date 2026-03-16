@@ -66,8 +66,8 @@ st.sidebar.metric("Reports Generated", reports_generated)
 # TITLE
 # ---------------------------
 
-st.title("TerraSense AI – Smart Farm Advisor 🌱")
-st.subheader("Farm Irrigation Advisor")
+st.title("TerraSense AI – Climate & Smart Agriculture Intelligence 🌱")
+st.subheader("AI-powered insights for irrigation, climate conditions, and sustainable farming")
 
 col1, col2 = st.columns([1,2])
 
