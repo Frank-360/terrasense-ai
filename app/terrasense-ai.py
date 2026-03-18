@@ -18,11 +18,31 @@ import random
 def get_weather_data(lat, lon):
     url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,precipitation"
     try:
-        response = requests.get(url)
-        data = response.json()
+        data = requests.get(url).json()
         return data["current"]["temperature_2m"], data["current"]["precipitation"]
     except:
         return None, None
+
+
+# ✅ NEW: REAL FORECAST FUNCTION (FIXES YOUR PROBLEM)
+def get_forecast_data(lat, lon):
+    url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=precipitation"
+    try:
+        data = requests.get(url).json()
+        rain_data = data["hourly"]["precipitation"]
+
+        total_rain = sum(rain_data[:40])  # ~5 days
+        time_to_rain = None
+
+        for i, rain in enumerate(rain_data):
+            if rain > 0:
+                time_to_rain = i
+                break
+
+        return total_rain, time_to_rain
+
+    except:
+        return 0, None
 
 
 def estimate_ai_water_saving(rainfall, temperature, soil_moisture):
@@ -80,7 +100,10 @@ st.set_page_config(page_title="TerraSense AI", page_icon="🌱", layout="wide")
 
 st.sidebar.title("🌱 Farm Setup")
 
-# Farmer Registration moved here
+crop = st.sidebar.selectbox("Select Crop",["Maize","Rice","Cassava","Millet"])
+farm_size = st.sidebar.number_input("Farm Size (hectares)",0.1,100.0,1.0)
+
+# Farmer Registration (moved)
 st.sidebar.subheader("👩‍🌾 Register Farmer")
 
 name = st.sidebar.text_input("Name")
@@ -96,12 +119,6 @@ if st.sidebar.button("Register"):
         df = new
     df.to_csv("farmers.csv",index=False)
     st.sidebar.success("Registered!")
-
-
-crop = st.sidebar.selectbox("Select Crop",["Maize","Rice","Cassava","Millet"])
-farm_size = st.sidebar.number_input("Farm Size (hectares)",0.1,100.0,1.0)
-
-
 
 # ---------------------------
 # MAIN UI
@@ -137,22 +154,26 @@ season = "Dry Season" if month in [11,12,1,2,3] else "Rainy Season"
 if st.button("Analyze Farm"):
 
     temp, rain = get_weather_data(lat, lon)
+    total_rain, time_to_rain = get_forecast_data(lat, lon)
+
     humidity = random.randint(40,80)
     soil = 0.6
 
     reduction = estimate_ai_water_saving(rain, temp, soil)
 
-    # Rain forecast simulation
-    total_rain = rain * 5
-    time_to_rain = random.randint(1,72)
+    # ✅ FIXED IRRIGATION LOGIC
+    if time_to_rain is not None and time_to_rain <= 12:
+        crop_status = "Rain Expected Soon"
+        advice = "Delay irrigation, rain expected shortly"
 
-    # Crop status logic (RESTORED)
-    if total_rain < 5 and humidity < 60:
+    elif total_rain < 5:
         crop_status = "High Water Stress"
         advice = "Irrigate immediately"
+
     elif total_rain < 10:
         crop_status = "Moderate Water Stress"
         advice = "Irrigate within 2–3 days"
+
     else:
         crop_status = "Healthy"
         advice = "No irrigation needed"
@@ -161,21 +182,28 @@ if st.button("Analyze Farm"):
 
     st.metric("Crop Status", crop_status)
     st.metric("5-Day Rainfall Forecast", f"{total_rain:.2f} mm")
-    st.warning(advice)
 
+    st.warning(advice)
     st.info(f"🤖 AI Water Saving: {reduction}%")
 
-    # Rain prediction (moved correctly)
+    # ✅ FIXED RAIN PREDICTION (CONSISTENT NOW)
     st.subheader("Next Rain Prediction")
 
-    if time_to_rain <= 3:
-        st.success("Rain expected within 3 hours")
-    elif time_to_rain <= 24:
-        st.success(f"Rain expected in {time_to_rain} hours")
-    else:
-        st.info(f"Rain expected in {time_to_rain/24:.1f} days")
+    if time_to_rain is not None:
 
-    # NDVI restored
+        if time_to_rain <= 3:
+            st.success("Rain expected within 3 hours")
+
+        elif time_to_rain <= 24:
+            st.success(f"Rain expected in {time_to_rain} hours")
+
+        elif time_to_rain <= 72:
+            st.info(f"Rain expected in {time_to_rain/24:.1f} days")
+
+    else:
+        st.warning("No rain expected in next few days")
+
+    # NDVI
     ndvi, status = vegetation_health()
     st.metric("NDVI", ndvi)
     st.write(status)
