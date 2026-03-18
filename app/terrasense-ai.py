@@ -89,7 +89,7 @@ frequency_map = {
     "Daily": 365
 }
     
-    return base.get(method, 500) * freq.get(frequency, 1) * farm_size
+return base.get(method, 500) * freq.get(frequency, 1) * farm_size
 
 
 def map_to_pump_type(method):
