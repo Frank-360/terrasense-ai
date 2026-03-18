@@ -81,31 +81,51 @@ def estimate_water_usage(method, frequency, farm_size):
         "Large pump": 5000
     }
 
-    freq = {
-        "Rarely": 1,
-        "Weekly": 3,
-        "2-3 times/week": 6,
-        "Daily": 10
-    }
 
+frequency_map = {
+    "Rarely": 20,
+    "Weekly": 52,
+    "2-3 times/week": 130,
+    "Daily": 365
+}
+    
     return base.get(method, 500) * freq.get(frequency, 1) * farm_size
 
 
 def map_to_pump_type(method):
     return {"Manual (bucket)":"manual","Small pump":"electric","Large pump":"diesel"}.get(method,"manual")
 
-
 def calculate_carbon_credits(method, frequency, farm_size, reduction_percent):
-    factors = {"diesel":2.68,"electric":0.5,"manual":0.0}
+
+    emission_factors = {
+        "diesel": 2.68,
+        "electric": 0.5,
+        "manual": 0.0
+    }
+
+    frequency_map = {
+        "Rarely": 20,
+        "Weekly": 52,
+        "2-3 times/week": 130,
+        "Daily": 365
+    }
+
     water = estimate_water_usage(method, frequency, farm_size)
     pump = map_to_pump_type(method)
-    saved = (water * reduction_percent/100) * factors[pump] / 1000
-    credits = saved / 1000
+
+    saved_per_cycle = (water * reduction_percent/100) * emission_factors[pump] / 1000
+
+    cycles = frequency_map.get(frequency, 52)
+
+    annual_saved = saved_per_cycle * cycles
+    annual_credits = annual_saved / 1000
+
     return {
-    "water_usage": round(water, 2),
-    "emission_savings": round(saved, 2),
-    "carbon_credits": round(credits, 6)  # 👈 more precision
-}
+        "water_usage": round(water, 2),
+        "emission_savings": round(annual_saved, 2),
+        "carbon_credits": round(annual_credits, 4)
+    }
+
 
 # ---------------------------
 # PAGE CONFIG
@@ -269,6 +289,6 @@ if st.button("Calculate Impact"):
 
     st.metric("Water Use", f"{result['water_usage']:.0f} L")
     st.metric("Emissions Saved", f"{emissions_kg:.2f} kg CO₂")
-    st.metric("Carbon Credits", f"{emissions_tons:.4f} tons")
+    st.metric("Annual Carbon Credits", f"{emissions_tons:.4f} tons")
     st.metric("Estimated Value", f"${value:.2f}")
 
