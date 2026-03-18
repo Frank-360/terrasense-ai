@@ -166,7 +166,7 @@ if st.button("Analyze Farm"):
         crop_status = "Rain Expected Soon"
         advice = "Delay irrigation, rain expected shortly"
 
-    elif total_rain < 5:
+    elif time_to_rain is None:
         crop_status = "High Water Stress"
         advice = "Irrigate immediately"
 
@@ -187,21 +187,26 @@ if st.button("Analyze Farm"):
     st.info(f"🤖 AI Water Saving: {reduction}%")
 
     # ✅ FIXED RAIN PREDICTION (CONSISTENT NOW)
-    st.subheader("Next Rain Prediction")
+   
+st.subheader("Next Rain Prediction")
 
-    if time_to_rain is not None:
+if time_to_rain is not None:
 
-        if time_to_rain <= 3:
-            st.success("Rain expected within 3 hours")
+    if time_to_rain <= 3:
+        st.success("🌧 Rain expected within 3 hours")
 
-        elif time_to_rain <= 24:
-            st.success(f"Rain expected in {time_to_rain} hours")
+    elif time_to_rain <= 24:
+        st.success(f"🌧 Rain expected in {time_to_rain} hours")
 
-        elif time_to_rain <= 72:
-            st.info(f"Rain expected in {time_to_rain/24:.1f} days")
+    elif time_to_rain <= 72:
+        st.info(f"🌧 Rain expected in {time_to_rain/24:.1f} days")
 
     else:
-        st.warning("No rain expected in next few days")
+        st.warning("🌧 Rain is several days away")
+
+else:
+    st.error("☀️ No rainfall expected in the next 5 days — irrigation is important")
+    
 
     # NDVI
     ndvi, status = vegetation_health()
