@@ -117,12 +117,6 @@ st.set_page_config(page_title="TerraSense AI", page_icon="🌱", layout="wide")
 # SIDEBAR
 # ---------------------------
 
-st.sidebar.title("🌱 Farm Setup")
-
-crop = st.sidebar.selectbox("Select Crop",["Maize","Rice","Cassava","Millet"])
-farm_size = st.sidebar.number_input("Farm Size (hectares)",0.1,100.0,1.0)
-
-# Farmer Registration (moved)
 st.sidebar.subheader("👩‍🌾 Register Farmer")
 
 name = st.sidebar.text_input("Name")
@@ -138,6 +132,14 @@ if st.sidebar.button("Register"):
         df = new
     df.to_csv("farmers.csv",index=False)
     st.sidebar.success("Registered!")
+
+st.sidebar.title("🌱 Farm Setup")
+
+crop = st.sidebar.selectbox("Select Crop",["Maize","Rice","Cassava","Millet"])
+farm_size = st.sidebar.number_input("Farm Size (hectares)",0.1,100.0,1.0)
+
+# Farmer Registration (moved)
+
 
 # ---------------------------
 # MAIN UI
@@ -250,7 +252,8 @@ st.header("🌱 Carbon Credit Dashboard")
 method = st.selectbox("Irrigation Method",["Rain-fed","Manual (bucket)","Small pump","Large pump"])
 freq = st.selectbox("Frequency",["Rarely","Weekly","2-3 times/week","Daily"])
 
-if st.button("Calculate Impact"):
+
+    if st.button("Calculate Impact"):
 
     temp, rain = get_weather_data(lat, lon)
     soil = 0.5
@@ -258,9 +261,21 @@ if st.button("Calculate Impact"):
 
     result = calculate_carbon_credits(method, freq, farm_size, reduction)
 
+    # ✅ Convert to tons
+    emissions_kg = result["emission_savings"]
+    emissions_tons = emissions_kg / 1000
+
+    # ✅ Carbon price
+    carbon_price = 10
+
+    # ✅ Calculate value
+    value = emissions_tons * carbon_price
+
+    # ✅ Display
     st.metric("Water Use", f"{result['water_usage']:.0f} L")
-    st.metric("Emissions Saved", f"{result['emission_savings']:.2f} kg CO₂")
-    st.metric("Carbon Credits", f"{result['carbon_credits']:.6f}")
+    st.metric("Emissions Saved", f"{emissions_kg:.2f} kg CO₂")
+    st.metric("Carbon Credits", f"{emissions_tons:.6f} tons")
+    st.metric("Estimated Value", f"${value:.2f}")
 
     carbon_price = 10
     value = emissions_tons * carbon_price
