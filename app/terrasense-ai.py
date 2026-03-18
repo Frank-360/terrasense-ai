@@ -253,7 +253,7 @@ method = st.selectbox("Irrigation Method",["Rain-fed","Manual (bucket)","Small p
 freq = st.selectbox("Frequency",["Rarely","Weekly","2-3 times/week","Daily"])
 
 
-   if st.button("Calculate Impact"):
+if st.button("Calculate Impact"):
 
     temp, rain = get_weather_data(lat, lon)
     soil = 0.5
