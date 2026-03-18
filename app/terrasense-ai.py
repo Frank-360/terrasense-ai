@@ -80,9 +80,6 @@ st.set_page_config(page_title="TerraSense AI", page_icon="🌱", layout="wide")
 
 st.sidebar.title("🌱 Farm Setup")
 
-crop = st.sidebar.selectbox("Select Crop",["Maize","Rice","Cassava","Millet"])
-farm_size = st.sidebar.number_input("Farm Size (hectares)",0.1,100.0,1.0)
-
 # Farmer Registration moved here
 st.sidebar.subheader("👩‍🌾 Register Farmer")
 
@@ -99,6 +96,12 @@ if st.sidebar.button("Register"):
         df = new
     df.to_csv("farmers.csv",index=False)
     st.sidebar.success("Registered!")
+
+
+crop = st.sidebar.selectbox("Select Crop",["Maize","Rice","Cassava","Millet"])
+farm_size = st.sidebar.number_input("Farm Size (hectares)",0.1,100.0,1.0)
+
+
 
 # ---------------------------
 # MAIN UI
