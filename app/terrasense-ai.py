@@ -187,7 +187,8 @@ if st.button("Analyze Farm"):
     st.info(f"🤖 AI Water Saving: {reduction}%")
 
     # ✅ FIXED RAIN PREDICTION (CONSISTENT NOW)
-   
+
+total_rain, time_to_rain = get_forecast_data(lat, lon)
 st.subheader("Next Rain Prediction")
 
 if time_to_rain is not None:
