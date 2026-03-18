@@ -74,6 +74,7 @@ def vegetation_health():
 
 
 def estimate_water_usage(method, frequency, farm_size):
+
     base = {
         "Rain-fed": 0,
         "Manual (bucket)": 500,
@@ -81,14 +82,14 @@ def estimate_water_usage(method, frequency, farm_size):
         "Large pump": 5000
     }
 
-frequency_map = {
-    "Rarely": 20,
-    "Weekly": 52,
-    "2-3 times/week": 130,
-    "Daily": 365
-}
-return base.get(method, 500) * freq.get(frequency, 1) * farm_size
+    freq = {
+        "Rarely": 1,
+        "Weekly": 3,
+        "2-3 times/week": 6,
+        "Daily": 10
+    }
 
+    return base.get(method, 500) * freq.get(frequency, 1) * farm_size
 def map_to_pump_type(method):
     return {"Manual (bucket)":"manual","Small pump":"electric","Large pump":"diesel"}.get(method,"manual")
 
