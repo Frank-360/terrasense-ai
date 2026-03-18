@@ -261,3 +261,8 @@ if st.button("Calculate Impact"):
     st.metric("Water Use", f"{result['water_usage']:.0f} L")
     st.metric("Emissions Saved", f"{result['emission_savings']:.2f} kg CO₂")
     st.metric("Carbon Credits", f"{result['carbon_credits']:.6f}")
+
+    carbon_price = 10
+    value = emissions_tons * carbon_price
+
+    st.metric("Estimated Value", f"${value:.2f}")
