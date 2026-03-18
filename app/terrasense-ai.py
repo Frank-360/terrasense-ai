@@ -10,6 +10,39 @@ from io import BytesIO
 import pandas as pd
 import os
 import random
+import requests
+
+# 🔹 Get live weather data
+def get_weather_data(lat, lon):
+    url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,precipitation"
+
+    try:
+        response = requests.get(url)
+        data = response.json()
+
+        temperature = data["current"]["temperature_2m"]
+        rainfall = data["current"]["precipitation"]
+
+        return temperature, rainfall
+
+    except:
+        return None, None
+
+
+# 🔹 AI water saving logic
+def estimate_ai_water_saving(rainfall, temperature, soil_moisture):
+    saving = 0
+
+    if rainfall > 10:
+        saving += 20
+
+    if soil_moisture > 0.6:
+        saving += 30
+
+    if temperature > 35:
+        saving -= 10
+
+    return max(0, min(saving, 50))
 
 st.set_page_config(
     page_title="TerraSense AI",
@@ -420,12 +453,56 @@ frequency = st.selectbox(
     ["Rarely", "Weekly", "2-3 times/week", "Daily"]
 )
 
-reduction_percent = st.slider(
-    "AI Water Saving (%)",
-    0, 100, 25
+def estimate_ai_water_saving(rainfall, temperature, soil_moisture):
+    saving = 0
+
+    # Rain reduces irrigation need
+    if rainfall > 10:
+        saving += 20
+
+    # High soil moisture → less watering needed
+    if soil_moisture > 0.6:
+        saving += 30
+
+
+rainfall = 12          # from API
+temperature = 30       # from API
+soil_moisture = 0.7    # estimated or satellite
+
+reduction_percent = estimate_ai_water_saving(
+    rainfall,
+    temperature,
+    soil_moisture
 )
 
+st.info(f"🤖 AI Estimated Water Saving: {reduction_percent}%")
+
+st.subheader("📍 Farm Location")
+
+lat = st.number_input("Latitude", value=7.15)
+lon = st.number_input("Longitude", value=3.35)
+
+temperature, rainfall = get_weather_data(lat, lon)
+
+if temperature is not None:
+    st.write(f"🌡 Temperature: {temperature}°C")
+    st.write(f"🌧 Rainfall: {rainfall} mm")
+else:
+    st.warning("⚠️ Could not fetch weather data")
+
+soil_moisture = st.slider("Estimated Soil Moisture", 0.0, 1.0, 0.5)
+
 if st.button("Calculate Impact"):
+    # ✅ AI water saving calculation
+if temperature is not None:
+    reduction_percent = estimate_ai_water_saving(
+        rainfall,
+        temperature,
+        soil_moisture
+    )
+    st.info(f"🤖 AI Estimated Water Saving: {reduction_percent}%")
+else:
+    reduction_percent = 20  # fallback if API fails
     result = calculate_carbon_credits(
         irrigation_method,
         frequency,
@@ -446,4 +523,9 @@ if st.button("Calculate Impact"):
 
     st.success(f"💰 Potential Carbon Value: ${round(value,2)}")
 
-    st.write("DEBUG:", irrigation_method, frequency)
+  
+    # Very hot weather → reduces savings
+    if temperature > 35:
+        saving -= 10
+
+    return max(0, min(saving, 50))  # cap between 0–50%
