@@ -494,12 +494,17 @@ soil_moisture = st.slider("Estimated Soil Moisture", 0.0, 1.0, 0.5)
 
 if st.button("Calculate Impact"):
     # ✅ AI water saving calculation
+
 if temperature is not None:
     reduction_percent = estimate_ai_water_saving(
         rainfall,
         temperature,
         soil_moisture
     )
+    st.info(f"🤖 AI Estimated Water Saving: {reduction_percent}%")
+else:
+    reduction_percent = 20
+    
     st.info(f"🤖 AI Estimated Water Saving: {reduction_percent}%")
 else:
     reduction_percent = 20  # fallback if API fails
