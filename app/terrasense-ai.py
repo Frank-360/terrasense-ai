@@ -346,3 +346,61 @@ if st.button("Register Farmer"):
     df.to_csv("farmers.csv",index=False)
 
     st.success("Farmer registered successfully!")
+
+
+def calculate_carbon_credits(farm_size, water_usage, reduction_percent, pump_type):
+    """
+    farm_size: hectares
+    water_usage: litres per irrigation cycle
+    reduction_percent: % water reduction from AI recommendation
+    pump_type: 'diesel', 'electric', or 'manual'
+    """
+
+    # Emission factors (kg CO2 per litre or kWh equivalent)
+    emission_factors = {
+        "diesel": 2.68,      # kg CO2 per litre diesel
+        "electric": 0.5,     # kg CO2 per kWh (approx, varies by country)
+        "manual": 0.0
+    }
+
+    # Estimate baseline emissions
+    baseline_emissions = water_usage * emission_factors.get(pump_type, 0.5) / 1000
+
+    # Reduced water usage
+    reduced_water = water_usage * (reduction_percent / 100)
+
+    # Emission savings
+    emission_savings = reduced_water * emission_factors.get(pump_type, 0.5) / 1000
+
+    # Carbon credits (1 credit = 1 ton CO2)
+    carbon_credits = emission_savings / 1000
+
+    return {
+        "baseline_emissions": round(baseline_emissions, 2),
+        "emission_savings": round(emission_savings, 2),
+        "carbon_credits": round(carbon_credits, 4)
+    }
+
+st.header("🌱 Carbon Credit & Sustainability Dashboard")
+
+farm_size = st.number_input("Farm Size (hectares)", min_value=0.1, value=1.0)
+water_usage = st.number_input("Water Usage per Cycle (litres)", min_value=100, value=1000)
+reduction_percent = st.slider("AI Water Reduction (%)", 0, 100, 25)
+pump_type = st.selectbox("Pump Type", ["diesel", "electric", "manual"])
+
+if st.button("Calculate Carbon Impact"):
+    result = calculate_carbon_credits(farm_size, water_usage, reduction_percent, pump_type)
+
+    st.subheader("📊 Results")
+
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("Baseline Emissions (kg CO₂)", result["baseline_emissions"])
+    col2.metric("Emissions Saved (kg CO₂)", result["emission_savings"])
+    col3.metric("Carbon Credits (tons)", result["carbon_credits"])
+
+    # Estimate value ($10 per ton)
+    carbon_price = 10
+    value = result["carbon_credits"] * carbon_price
+
+    st.success(f"💰 Estimated Carbon Credit Value: ${round(value,2)}")
