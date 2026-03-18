@@ -350,10 +350,10 @@ if st.button("Register Farmer"):
 
 def estimate_water_usage(method, frequency, farm_size):
     base_usage = {
-        "🌧 Rain-fed": 0,
-        "🪣 Manual (bucket)": 200,
-        "🚿 Small pump": 800,
-        "🚜 Large pump": 2000
+        "Rain-fed": 0,
+        "Manual (bucket)": 200,
+        "Small pump": 800,
+        "Large pump": 2000
     }
 
     freq_multiplier = {
@@ -363,7 +363,12 @@ def estimate_water_usage(method, frequency, farm_size):
         "Daily": 4
     }
 
-    return base_usage[method] * freq_multiplier[frequency] * farm_size
+    # Safe access with defaults
+    method_value = base_usage.get(method, 200)
+    freq_value = freq_multiplier.get(frequency, 1)
+
+    return method_value * freq_value * farm_size
+
 
 
 def map_to_pump_type(method):
@@ -440,3 +445,5 @@ if st.button("Calculate Impact"):
     value = result["carbon_credits"] * carbon_price
 
     st.success(f"💰 Potential Carbon Value: ${round(value,2)}")
+
+    st.write("DEBUG:", irrigation_method, frequency)
