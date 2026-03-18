@@ -64,11 +64,9 @@ def calculate_carbon_credits(method, frequency, farm_size, reduction_percent):
     factors = {"diesel":2.68,"electric":0.5,"manual":0.0}
     water = estimate_water_usage(method, frequency, farm_size)
     pump = map_to_pump_type(method)
-    emission = water * factors[pump] / 1000
     saved = (water * reduction_percent/100) * factors[pump] / 1000
     credits = saved / 1000
     return {"water_usage":round(water,2),"emission_savings":round(saved,2),"carbon_credits":round(credits,4)}
-
 
 # ---------------------------
 # PAGE CONFIG
@@ -77,7 +75,7 @@ def calculate_carbon_credits(method, frequency, farm_size, reduction_percent):
 st.set_page_config(page_title="TerraSense AI", page_icon="🌱", layout="wide")
 
 # ---------------------------
-# SIDEBAR (UPDATED)
+# SIDEBAR
 # ---------------------------
 
 st.sidebar.title("🌱 Farm Setup")
@@ -85,7 +83,7 @@ st.sidebar.title("🌱 Farm Setup")
 crop = st.sidebar.selectbox("Select Crop",["Maize","Rice","Cassava","Millet"])
 farm_size = st.sidebar.number_input("Farm Size (hectares)",0.1,100.0,1.0)
 
-# 👇 MOVED FARMER REGISTRATION HERE
+# Farmer Registration moved here
 st.sidebar.subheader("👩‍🌾 Register Farmer")
 
 name = st.sidebar.text_input("Name")
@@ -102,16 +100,12 @@ if st.sidebar.button("Register"):
     df.to_csv("farmers.csv",index=False)
     st.sidebar.success("Registered!")
 
-# Metrics
-farmers_registered = len(pd.read_csv("farmers.csv")) if os.path.exists("farmers.csv") else 0
-st.sidebar.metric("Farmers Registered", farmers_registered)
-
 # ---------------------------
 # MAIN UI
 # ---------------------------
 
 st.title("TerraSense AI 🌱")
-st.subheader("AI-powered farm intelligence")
+st.subheader("AI-powered irrigation, climate and carbon insights")
 
 col1, col2 = st.columns([1,2])
 
@@ -124,7 +118,14 @@ else:
 
 with col2:
     m = folium.Map(location=[lat, lon], zoom_start=13)
-    map_data = st_folium(m)
+    st_folium(m)
+
+# ---------------------------
+# SEASON
+# ---------------------------
+
+month = datetime.datetime.now().month
+season = "Dry Season" if month in [11,12,1,2,3] else "Rainy Season"
 
 # ---------------------------
 # ANALYZE FARM
@@ -133,41 +134,68 @@ with col2:
 if st.button("Analyze Farm"):
 
     temp, rain = get_weather_data(lat, lon)
+    humidity = random.randint(40,80)
     soil = 0.6
 
     reduction = estimate_ai_water_saving(rain, temp, soil)
 
-    st.subheader("Farm Analysis")
+    # Rain forecast simulation
+    total_rain = rain * 5
+    time_to_rain = random.randint(1,72)
 
-    st.metric("Temperature", f"{temp}°C")
-    st.metric("Rainfall", f"{rain} mm")
+    # Crop status logic (RESTORED)
+    if total_rain < 5 and humidity < 60:
+        crop_status = "High Water Stress"
+        advice = "Irrigate immediately"
+    elif total_rain < 10:
+        crop_status = "Moderate Water Stress"
+        advice = "Irrigate within 2–3 days"
+    else:
+        crop_status = "Healthy"
+        advice = "No irrigation needed"
+
+    st.subheader("Farm Analysis Results")
+
+    st.metric("Crop Status", crop_status)
+    st.metric("5-Day Rainfall Forecast", f"{total_rain:.2f} mm")
+    st.warning(advice)
+
     st.info(f"🤖 AI Water Saving: {reduction}%")
 
-    # 👇 MOVED RAIN PREDICTION HERE (FIXED)
+    # Rain prediction (moved correctly)
     st.subheader("Next Rain Prediction")
 
-    if rain > 0:
-        st.success("Rain expected soon")
+    if time_to_rain <= 3:
+        st.success("Rain expected within 3 hours")
+    elif time_to_rain <= 24:
+        st.success(f"Rain expected in {time_to_rain} hours")
     else:
-        st.warning("No rain expected soon")
+        st.info(f"Rain expected in {time_to_rain/24:.1f} days")
 
-    carbon = estimate_carbon(farm_size, crop)
-    st.metric("Carbon Stored", f"{carbon} tons")
-
+    # NDVI restored
     ndvi, status = vegetation_health()
     st.metric("NDVI", ndvi)
     st.write(status)
+
+    # Carbon
+    carbon = estimate_carbon(farm_size, crop)
+    st.metric("Carbon Stored", f"{carbon} tons CO₂")
+
+    # Climate score
+    score = min(int((carbon*10)+(total_rain*2)),100)
+    st.metric("Climate Score", score)
 
 # ---------------------------
 # CARBON DASHBOARD
 # ---------------------------
 
-st.header("🌱 Carbon Impact")
+st.header("🌱 Carbon Credit Dashboard")
 
 method = st.selectbox("Irrigation Method",["Rain-fed","Manual (bucket)","Small pump","Large pump"])
 freq = st.selectbox("Frequency",["Rarely","Weekly","2-3 times/week","Daily"])
 
 if st.button("Calculate Impact"):
+
     temp, rain = get_weather_data(lat, lon)
     soil = 0.5
     reduction = estimate_ai_water_saving(rain, temp, soil)
