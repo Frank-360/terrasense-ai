@@ -348,59 +348,95 @@ if st.button("Register Farmer"):
     st.success("Farmer registered successfully!")
 
 
-def calculate_carbon_credits(farm_size, water_usage, reduction_percent, pump_type):
-    """
-    farm_size: hectares
-    water_usage: litres per irrigation cycle
-    reduction_percent: % water reduction from AI recommendation
-    pump_type: 'diesel', 'electric', or 'manual'
-    """
+def estimate_water_usage(method, frequency, farm_size):
+    base_usage = {
+        "🌧 Rain-fed": 0,
+        "🪣 Manual (bucket)": 200,
+        "🚿 Small pump": 800,
+        "🚜 Large pump": 2000
+    }
 
-    # Emission factors (kg CO2 per litre or kWh equivalent)
+    freq_multiplier = {
+        "Rarely": 0.5,
+        "Weekly": 1,
+        "2-3 times/week": 2,
+        "Daily": 4
+    }
+
+    return base_usage[method] * freq_multiplier[frequency] * farm_size
+
+
+def map_to_pump_type(method):
+    if method == "Manual (bucket)":
+        return "manual"
+    elif method == "Small pump":
+        return "electric"
+    elif method == "Large pump":
+        return "diesel"
+    else:
+        return "manual"
+
+
+def calculate_carbon_credits(method, frequency, farm_size, reduction_percent):
     emission_factors = {
-        "diesel": 2.68,      # kg CO2 per litre diesel
-        "electric": 0.5,     # kg CO2 per kWh (approx, varies by country)
+        "diesel": 2.68,
+        "electric": 0.5,
         "manual": 0.0
     }
 
-    # Estimate baseline emissions
-    baseline_emissions = water_usage * emission_factors.get(pump_type, 0.5) / 1000
+    water_usage = estimate_water_usage(method, frequency, farm_size)
+    pump_type = map_to_pump_type(method)
 
-    # Reduced water usage
+    baseline_emissions = water_usage * emission_factors[pump_type] / 1000
+
     reduced_water = water_usage * (reduction_percent / 100)
+    emission_savings = reduced_water * emission_factors[pump_type] / 1000
 
-    # Emission savings
-    emission_savings = reduced_water * emission_factors.get(pump_type, 0.5) / 1000
-
-    # Carbon credits (1 credit = 1 ton CO2)
     carbon_credits = emission_savings / 1000
 
     return {
+        "water_usage": round(water_usage, 2),
         "baseline_emissions": round(baseline_emissions, 2),
         "emission_savings": round(emission_savings, 2),
         "carbon_credits": round(carbon_credits, 4)
     }
 
-st.header("🌱 Carbon Credit & Sustainability Dashboard")
+st.header("🌱 Farm Climate Impact & Carbon Credits")
 
 farm_size = st.number_input("Farm Size (hectares)", min_value=0.1, value=1.0)
-water_usage = st.number_input("Water Usage per Cycle (litres)", min_value=100, value=1000)
-reduction_percent = st.slider("AI Water Reduction (%)", 0, 100, 25)
-pump_type = st.selectbox("Pump Type", ["diesel", "electric", "manual"])
 
-if st.button("Calculate Carbon Impact"):
-    result = calculate_carbon_credits(farm_size, water_usage, reduction_percent, pump_type)
+irrigation_method = st.selectbox(
+    "How do you water your farm?",
+    ["Rain-fed", "Manual (bucket)", "Small pump", "Large pump"]
+)
 
-    st.subheader("📊 Results")
+frequency = st.selectbox(
+    "How often do you irrigate?",
+    ["Rarely", "Weekly", "2-3 times/week", "Daily"]
+)
+
+reduction_percent = st.slider(
+    "AI Water Saving (%)",
+    0, 100, 25
+)
+
+if st.button("Calculate Impact"):
+    result = calculate_carbon_credits(
+        irrigation_method,
+        frequency,
+        farm_size,
+        reduction_percent
+    )
+
+    st.subheader("📊 Your Farm Climate Impact")
 
     col1, col2, col3 = st.columns(3)
 
-    col1.metric("Baseline Emissions (kg CO₂)", result["baseline_emissions"])
-    col2.metric("Emissions Saved (kg CO₂)", result["emission_savings"])
-    col3.metric("Carbon Credits (tons)", result["carbon_credits"])
+    col1.metric("Estimated Water Use", f"{result['water_usage']} L")
+    col2.metric("Emissions Saved", f"{result['emission_savings']} kg CO₂")
+    col3.metric("Carbon Credits", f"{result['carbon_credits']} tons")
 
-    # Estimate value ($10 per ton)
     carbon_price = 10
     value = result["carbon_credits"] * carbon_price
 
-    st.success(f"💰 Estimated Carbon Credit Value: ${round(value,2)}")
+    st.success(f"💰 Potential Carbon Value: ${round(value,2)}")
