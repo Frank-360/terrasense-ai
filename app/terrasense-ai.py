@@ -44,16 +44,19 @@ def get_forecast_data(lat, lon):
     except:
         return 0, None
 
-
 def estimate_ai_water_saving(rainfall, temperature, soil_moisture):
-    saving = 0
-    if rainfall > 10:
+    saving = 15  # baseline
+
+    if rainfall > 5:
+        saving += 15
+
+    if soil_moisture > 0.5:
         saving += 20
-    if soil_moisture > 0.6:
-        saving += 30
-    if temperature > 35:
-        saving -= 10
-    return max(0, min(saving, 50))
+
+    if temperature > 30:
+        saving -= 5
+
+    return max(5, min(saving, 50))
 
 
 def estimate_carbon(farm_size, crop):
@@ -71,9 +74,21 @@ def vegetation_health():
 
 
 def estimate_water_usage(method, frequency, farm_size):
-    base = {"Rain-fed":0,"Manual (bucket)":200,"Small pump":800,"Large pump":2000}
-    freq = {"Rarely":0.5,"Weekly":1,"2-3 times/week":2,"Daily":4}
-    return base.get(method,200) * freq.get(frequency,1) * farm_size
+    base = {
+        "Rain-fed": 0,
+        "Manual (bucket)": 500,
+        "Small pump": 2000,
+        "Large pump": 5000
+    }
+
+    freq = {
+        "Rarely": 1,
+        "Weekly": 3,
+        "2-3 times/week": 6,
+        "Daily": 10
+    }
+
+    return base.get(method, 500) * freq.get(frequency, 1) * farm_size
 
 
 def map_to_pump_type(method):
@@ -86,7 +101,11 @@ def calculate_carbon_credits(method, frequency, farm_size, reduction_percent):
     pump = map_to_pump_type(method)
     saved = (water * reduction_percent/100) * factors[pump] / 1000
     credits = saved / 1000
-    return {"water_usage":round(water,2),"emission_savings":round(saved,2),"carbon_credits":round(credits,4)}
+    return {
+    "water_usage": round(water, 2),
+    "emission_savings": round(saved, 2),
+    "carbon_credits": round(credits, 6)  # 👈 more precision
+}
 
 # ---------------------------
 # PAGE CONFIG
@@ -239,6 +258,6 @@ if st.button("Calculate Impact"):
 
     result = calculate_carbon_credits(method, freq, farm_size, reduction)
 
-    st.metric("Water Use", result["water_usage"])
-    st.metric("Emissions Saved", result["emission_savings"])
-    st.metric("Carbon Credits", result["carbon_credits"])
+    st.metric("Water Use", f"{result['water_usage']:.0f} L")
+    st.metric("Emissions Saved", f"{result['emission_savings']:.2f} kg CO₂")
+    st.metric("Carbon Credits", f"{result['carbon_credits']:.6f}")
