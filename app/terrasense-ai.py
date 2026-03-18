@@ -253,7 +253,7 @@ method = st.selectbox("Irrigation Method",["Rain-fed","Manual (bucket)","Small p
 freq = st.selectbox("Frequency",["Rarely","Weekly","2-3 times/week","Daily"])
 
 
-    if st.button("Calculate Impact"):
+   if st.button("Calculate Impact"):
 
     temp, rain = get_weather_data(lat, lon)
     soil = 0.5
@@ -261,23 +261,14 @@ freq = st.selectbox("Frequency",["Rarely","Weekly","2-3 times/week","Daily"])
 
     result = calculate_carbon_credits(method, freq, farm_size, reduction)
 
-    # ✅ Convert to tons
     emissions_kg = result["emission_savings"]
     emissions_tons = emissions_kg / 1000
 
-    # ✅ Carbon price
     carbon_price = 10
-
-    # ✅ Calculate value
     value = emissions_tons * carbon_price
 
-    # ✅ Display
     st.metric("Water Use", f"{result['water_usage']:.0f} L")
     st.metric("Emissions Saved", f"{emissions_kg:.2f} kg CO₂")
-    st.metric("Carbon Credits", f"{emissions_tons:.6f} tons")
+    st.metric("Carbon Credits", f"{emissions_tons:.4f} tons")
     st.metric("Estimated Value", f"${value:.2f}")
 
-    carbon_price = 10
-    value = emissions_tons * carbon_price
-
-    st.metric("Estimated Value", f"${value:.2f}")
