@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test TerraSense API</title>
+</head>
+<body>
+
+<h2>Test TerraSense Analyze</h2>
+
+<button onclick="sendRequest()">Run Analysis</button>
+
+<pre id="result"></pre>
+
+<script>
+function sendRequest() {
+    fetch("https://terrasense-ai.onrender.com/analyze", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            lat: 7.38,
+            lon: 3.93,
+            crop: "Maize",
+            farm_size: 2
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("result").innerText = JSON.stringify(data, null, 2);
+    })
+    .catch(err => console.error(err));
+}
+</script>
+
+</body>
+</html>
