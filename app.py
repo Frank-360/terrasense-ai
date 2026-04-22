@@ -6,8 +6,6 @@ from flask_cors import CORS
 
 
 app = Flask(__name__)
-CORS(app)
-app = Flask(__name__)
 
 # ---------------------------
 # FUNCTIONS (from your code)
@@ -82,6 +80,10 @@ def analyze():
     farm_size = data.get("farm_size", 1)
 
     temp, rain = get_weather_data(lat, lon)
+
+    if temp is None or rain is None:
+        temp = 30
+        rain = 0
     humidity = random.randint(40,80)
     soil = 0.6
 
