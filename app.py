@@ -81,6 +81,8 @@ def home():
 @app.route("/analyze", methods=["POST"])
 def analyze():
     try:
+        import datetime
+
         data = request.json or {}
 
         lat = data.get("lat", 7.38)
@@ -91,43 +93,73 @@ def analyze():
         method = data.get("method", "Manual (bucket)")
         frequency = data.get("frequency", "Weekly")
 
+        # 🌦 Weather
         temp, rain, forecast = get_weather_data(lat, lon)
 
-        humidity = random.randint(40,80)
+        humidity = random.randint(40, 80)
         soil = 0.6
 
         reduction = estimate_ai_water_saving(rain, temp, soil)
+        reduction = max(reduction, 10)  # prevent zero
 
-        if forecast < 5 and humidity < 60:
-            status = "High Water Stress"
+        # 🌧 Rain timing
+        time_to_rain = random.randint(1, 72)
+
+        # 🌱 Season
+        month = datetime.datetime.now().month
+        season = "Dry Season" if month in [11,12,1,2,3] else "Rainy Season"
+
+        # 🌾 Crop logic (RESTORED)
+        total_rain = forecast
+
+        if total_rain < 5 and humidity < 60:
+            crop_status = "High Water Stress"
             advice = "Irrigate immediately"
-        elif forecast < 10:
-            status = "Moderate Water Stress"
+            icon = "🔴"
+        elif total_rain < 10:
+            crop_status = "Moderate Water Stress"
             advice = "Irrigate within 2–3 days"
+            icon = "🟡"
         else:
-            status = "Healthy"
+            crop_status = "Healthy"
             advice = "No irrigation needed"
+            icon = "🟢"
 
-        ndvi, veg = vegetation_health()
+        # 🌿 NDVI (improved)
+        ndvi = round(0.4 + (rain / 20), 2)
+        ndvi = min(ndvi, 0.8)
+
+        if ndvi > 0.6:
+            veg = "Healthy vegetation"
+        elif ndvi > 0.4:
+            veg = "Moderate vegetation"
+        else:
+            veg = "Poor vegetation"
+
+        # 🌍 Carbon
         carbon = estimate_carbon(farm_size, crop)
 
         credits, usd = carbon_credits(method, frequency, farm_size, reduction)
 
+        # 📊 Climate score
+        score = min(int((carbon * 10) + (total_rain * 2)), 100)
+
         return jsonify({
-            "crop_status": status,
+            "season": season,
+            "crop_status": crop_status,
             "advice": advice,
+            "icon": icon,
             "temperature": temp,
-            "rain_forecast_5days": forecast,
+            "rain_5days": total_rain,
+            "time_to_rain": time_to_rain,
             "ndvi": ndvi,
             "vegetation_status": veg,
             "water_saving": reduction,
             "carbon": carbon,
             "carbon_credits": credits,
-            "carbon_value_usd": usd
+            "carbon_value_usd": usd,
+            "climate_score": score
         })
 
     except Exception as e:
         return jsonify({"error": str(e)})
-
-if __name__ == "__main__":
-    app.run()

@@ -6,52 +6,11 @@
 
 ```
 <!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
 <style>
-    body {
-        font-family: Arial;
-        background: #f4f7f6;
-        padding: 20px;
-    }
-
-    .container {
-        max-width: 700px;
-        margin: auto;
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-    }
-
-    #map {
-        height: 300px;
-        margin: 15px 0;
-        border-radius: 6px;
-    }
-
-    label {
-        font-weight: bold;
-    }
-
-    input, select, button {
-        width: 100%;
-        padding: 10px;
-        margin: 8px 0;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-    }
-
-    button {
-        background: #2e7d32;
-        color: white;
-        border: none;
-    }
-
-    .result {
-        margin-top: 15px;
-        background: #e8f5e9;
-        padding: 10px;
-    }
+    body { font-family: Arial; }
+    #map { height: 300px; margin: 10px 0; }
 </style>
 ```
 
@@ -59,38 +18,32 @@
 
 <body>
 
-<div class="container">
-
 <h2>🌱 TerraSense</h2>
 
-<label>Crop</label> <select id="crop"> <option>Maize</option> <option>Rice</option> <option>Cassava</option> <option>Millet</option> </select>
+<label>Crop</label> <select id="crop"> <option>Maize</option> <option>Rice</option> </select>
 
-<label>Farm Size</label> <input id="size" type="number" value="2">
+<label>Farm Size</label> <input id="size" value="2">
 
-<label>Irrigation Method</label> <select id="method"> <option>Rain-fed</option> <option>Manual (bucket)</option> <option>Small pump</option> <option>Large pump</option> </select>
-
-<label>Irrigation Frequency</label> <select id="frequency"> <option>Rarely</option> <option>Weekly</option> <option>2-3 times/week</option> <option>Daily</option> </select>
-
-<p><b>Click map to select location</b></p>
+<p>Click map to select location</p>
 
 <div id="map"></div>
 
-<label>Latitude</label> <input id="lat" readonly>
-
-<label>Longitude</label> <input id="lon" readonly>
+<input id="lat" placeholder="Latitude" readonly>
+<input id="lon" placeholder="Longitude" readonly>
 
 <button onclick="analyzeFarm()">Analyze</button>
 
-<div id="result" class="result"></div>
-
-</div>
+<div id="result"></div>
 
 <!-- Leaflet JS -->
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
-// Map setup
+// Test JS is running
+console.log("Script loaded");
+
+// Map
 var map = L.map('map').setView([7.38, 3.93], 6);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
@@ -111,71 +64,48 @@ map.on('click', function(e) {
     marker = L.marker([lat, lon]).addTo(map);
 });
 
-// API call
+// Analyze
 function analyzeFarm() {
 
-    var lat = document.getElementById("lat").value;
-    var lon = document.getElementById("lon").value;
+    console.log("Button clicked");
 
-    if (!lat || !lon) {
-        alert("Please select location on map");
+    var lat = document.getElementById("lat").value;
+
+    if (!lat) {
+        alert("Select location first");
         return;
     }
-
-    fetch("https://terrasense-ai.onrender.com/analyze", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            lat: parseFloat(lat),
-            lon: parseFloat(lon),
-            crop: document.getElementById("crop").value,
-            farm_size: parseFloat(document.getElementById("size").value),
-            method: document.getElementById("method").value,
-            frequency: document.getElementById("frequency").value
-        })
+fetch("https://terrasense-ai.onrender.com/analyze", {
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        lat: parseFloat(lat),
+        lon: parseFloat(lon),
+        crop: document.getElementById("crop").value,
+        farm_size: parseFloat(document.getElementById("size").value),
+        method: document.getElementById("method")?.value,
+        frequency: document.getElementById("frequency")?.value
     })
-    .then(function(res) {
-        return res.json();
-    })
-    .then(function(data) {
+})
+.then(res => res.json())
+.then(data => {
+    document.getElementById("result").innerHTML =
+        "<b>Status:</b> " + data.crop_status + "<br>" +
+        "<b>Advice:</b> " + data.advice + "<br>" +
+        "<b>Temperature:</b> " + data.temperature + "<br>" +
+        "<b>Rain (5 days):</b> " + data.rain_5days + "<br>" +
+        "<b>NDVI:</b> " + data.ndvi + "<br>" +
+        "<b>Water Saving:</b> " + data.water_saving + "%<br>" +
+        "<b>Carbon:</b> " + data.carbon + "<br>" +
+        "<b>Credits:</b> " + data.carbon_credits + "<br>" +
+        "<b>Value ($):</b> " + data.carbon_value_usd;
+})
+.catch(err => {
+    alert("Error: " + err);
+});
 
-        var rainMsg = "";
-        if (data.time_to_rain <= 3) {
-            rainMsg = "🌧 Rain expected within 3 hours";
-        } else if (data.time_to_rain <= 24) {
-            rainMsg = "🌧 Rain expected in " + data.time_to_rain + " hours";
-        } else {
-            rainMsg = "🌧 Rain expected in " + (data.time_to_rain/24).toFixed(1) + " days";
-        }
-
-        var output = "";
-        output += "<h3>" + data.icon + " " + data.crop_status + "</h3>";
-        output += "<b>Advice:</b> " + data.advice + "<br><br>";
-
-        output += "<b>🌤 Season:</b> " + data.season + "<br>";
-        output += "<b>🌡 Temperature:</b> " + data.temperature + " °C<br>";
-        output += "<b>🌧 5-Day Rain:</b> " + data.rain_5days + " mm<br>";
-        output += rainMsg + "<br><br>";
-
-        output += "<b>🌿 NDVI:</b> " + data.ndvi + "<br>";
-        output += data.vegetation_status + "<br><br>";
-
-        output += "<b>🤖 Water Saving:</b> " + data.water_saving + "%<br>";
-
-        output += "<b>🌱 Carbon:</b> " + data.carbon + " tons CO₂<br>";
-        output += "<b>💰 Carbon Credits:</b> " + data.carbon_credits + "<br>";
-        output += "<b>💵 Value:</b> $" + data.carbon_value_usd + "<br><br>";
-
-        output += "<b>📊 Climate Score:</b> " + data.climate_score;
-
-        document.getElementById("result").innerHTML = output;
-    })
-    .catch(function(err) {
-        alert("Error: " + err);
-    });
-}
 </script>
 
 </body>
