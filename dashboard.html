@@ -3,16 +3,20 @@
 <html>
 <head>
     <title>TerraSense Dashboard</title>
-    <style>
-        body {
-            font-family: Arial;
-            background: #f4f7f6;
-            padding: 20px;
-        }
 
+```
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+<style>
+    body {
+        font-family: Arial;
+        background: #f4f7f6;
+        padding: 20px;
+    }
 
     .container {
-        max-width: 600px;
+        max-width: 800px;
         margin: auto;
         background: white;
         padding: 20px;
@@ -21,33 +25,33 @@
 
     h2 {
         text-align: center;
-        color: green;
+        color: #2e7d32;
     }
 
-    label {
-        margin-top: 10px;
-        display: block;
-        font-weight: bold;
+    #map {
+        height: 300px;
+        margin-top: 15px;
+        border-radius: 8px;
     }
 
     input, select, button {
         width: 100%;
         padding: 10px;
-        margin-top: 5px;
+        margin-top: 10px;
     }
 
     button {
-        background: green;
+        background: #2e7d32;
         color: white;
         border: none;
         cursor: pointer;
-        margin-top: 15px;
     }
 
     .result {
         margin-top: 20px;
-        padding: 10px;
         background: #e8f5e9;
+        padding: 10px;
+        border-radius: 8px;
     }
 </style>
 ```
@@ -59,14 +63,14 @@
 <div class="container">
     <h2>🌱 TerraSense Dashboard</h2>
 
+```
+<p><b>Click on the map to select your farm location</b></p>
 
-<label>Latitude</label>
-<input id="lat" type="number" value="7.38">
+<div id="map"></div>
 
-<label>Longitude</label>
-<input id="lon" type="number" value="3.93">
+<input id="lat" placeholder="Latitude" readonly>
+<input id="lon" placeholder="Longitude" readonly>
 
-<label>Crop Type</label>
 <select id="crop">
     <option>Maize</option>
     <option>Rice</option>
@@ -74,17 +78,42 @@
     <option>Millet</option>
 </select>
 
-<label>Farm Size (hectares)</label>
-<input id="size" type="number" value="2">
+<input id="size" placeholder="Farm Size" value="2">
 
 <button onclick="analyzeFarm()">Analyze Farm</button>
 
 <div id="result" class="result"></div>
-
+```
 
 </div>
 
+<!-- Leaflet JS -->
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 <script>
+var map = L.map('map').setView([7.38, 3.93], 6);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: 'Map data © OpenStreetMap'
+}).addTo(map);
+
+var marker;
+
+map.on('click', function(e) {
+    var lat = e.latlng.lat;
+    var lon = e.latlng.lng;
+
+    document.getElementById("lat").value = lat;
+    document.getElementById("lon").value = lon;
+
+    if (marker) {
+        map.removeLayer(marker);
+    }
+
+    marker = L.marker([lat, lon]).addTo(map);
+});
+
 function analyzeFarm() {
     var lat = document.getElementById("lat").value;
     var lon = document.getElementById("lon").value;
@@ -103,24 +132,16 @@ function analyzeFarm() {
             farm_size: parseFloat(size)
         })
     })
-    .then(function(res) {
-        return res.json();
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("result").innerHTML =
+            "<b>Status:</b> " + data.crop_status + "<br>" +
+            "<b>Advice:</b> " + data.advice + "<br>" +
+            "<b>Temperature:</b> " + data.temperature + "<br>" +
+            "<b>NDVI:</b> " + data.ndvi + "<br>" +
+            "<b>Carbon:</b> " + data.carbon;
     })
-    .then(function(data) {
-        var output = "";
-        output += "<b>Status:</b> " + data.crop_status + "<br>";
-        output += "<b>Advice:</b> " + data.advice + "<br>";
-        output += "<b>Temperature:</b> " + data.temperature + "<br>";
-        output += "<b>Rain Forecast:</b> " + data.rain_forecast + "<br>";
-        output += "<b>NDVI:</b> " + data.ndvi + "<br>";
-        output += "<b>Vegetation:</b> " + data.vegetation_status + "<br>";
-        output += "<b>Water Saving:</b> " + data.ai_water_saving + "%<br>";
-        output += "<b>Carbon:</b> " + data.carbon + "<br>";
-        output += "<b>Climate Score:</b> " + data.climate_score + "<br>";
-
-        document.getElementById("result").innerHTML = output;
-    })
-    .catch(function(err) {
+    .catch(err => {
         alert("Error: " + err);
     });
 }
