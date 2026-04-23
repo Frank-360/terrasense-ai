@@ -4,7 +4,6 @@
 <head>
     <title>TerraSense Dashboard</title>
 
-```
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
@@ -53,8 +52,17 @@
         padding: 10px;
         border-radius: 8px;
     }
+
+    input, select {
+    width: 100%;
+    padding: 12px;
+    margin: 8px 0 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 14px;
+}
 </style>
-```
 
 </head>
 
@@ -63,7 +71,7 @@
 <div class="container">
     <h2>🌱 TerraSense Dashboard</h2>
 
-```
+
 <p><b>Click on the map to select your farm location</b></p>
 
 <div id="map"></div>
@@ -83,7 +91,7 @@
 <button onclick="analyzeFarm()">Analyze Farm</button>
 
 <div id="result" class="result"></div>
-```
+
 
 </div>
 
