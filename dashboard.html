@@ -3,7 +3,7 @@
 <html>
 <head>
     <title>TerraSense Dashboard</title>
-
+git
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
@@ -72,13 +72,24 @@
     <h2>🌱 TerraSense Dashboard</h2>
 
 
+<<div class="container">
+    <h2>🌱 TerraSense Dashboard</h2>
+
+```
 <p><b>Click on the map to select your farm location</b></p>
 
+<!-- MAP -->
 <div id="map"></div>
 
+<!-- 👇 PLACE INPUTS HERE -->
+
+<label>Latitude</label>
 <input id="lat" placeholder="Latitude" readonly>
+
+<label>Longitude</label>
 <input id="lon" placeholder="Longitude" readonly>
 
+<label>Crop Type</label>
 <select id="crop">
     <option>Maize</option>
     <option>Rice</option>
@@ -86,11 +97,18 @@
     <option>Millet</option>
 </select>
 
-<input id="size" placeholder="Farm Size" value="2">
+<label>Farm Size (hectares)</label>
+<input id="size" value="2">
 
+<!-- BUTTON -->
 <button onclick="analyzeFarm()">Analyze Farm</button>
 
+<!-- RESULT -->
 <div id="result" class="result"></div>
+
+
+</div>
+
 
 
 </div>
