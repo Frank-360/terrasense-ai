@@ -76,19 +76,11 @@ git
     <h2>🌱 TerraSense Dashboard</h2>
 
 ```
-<p><b>Click on the map to select your farm location</b></p>
+<div class="container">
+    <h2>🌱 TerraSense Dashboard</h2>
 
-<!-- MAP -->
-<div id="map"></div>
-
-<!-- 👇 PLACE INPUTS HERE -->
-
-<label>Latitude</label>
-<input id="lat" placeholder="Latitude" readonly>
-
-<label>Longitude</label>
-<input id="lon" placeholder="Longitude" readonly>
-
+```
+<!-- FORM FIRST -->
 <label>Crop Type</label>
 <select id="crop">
     <option>Maize</option>
@@ -98,13 +90,29 @@ git
 </select>
 
 <label>Farm Size (hectares)</label>
-<input id="size" value="2">
+<input id="size" type="number" value="2">
+
+<p><b>Now click on the map to select your farm location</b></p>
+
+<!-- MAP -->
+<div id="map"></div>
+
+<!-- COORDINATES (auto-filled) -->
+<label>Latitude</label>
+<input id="lat" readonly>
+
+<label>Longitude</label>
+<input id="lon" readonly>
 
 <!-- BUTTON -->
 <button onclick="analyzeFarm()">Analyze Farm</button>
 
 <!-- RESULT -->
 <div id="result" class="result"></div>
+```
+
+</div>
+
 
 
 </div>
