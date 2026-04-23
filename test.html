@@ -1,18 +1,18 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Test TerraSense API</title>
-</head>
 <body>
 
-<h2>Test TerraSense Analyze</h2>
-
-<button onclick="sendRequest()">Run Analysis</button>
+<h2>TerraSense Test</h2>
+<button id="btn">Run Analysis</button>
 
 <pre id="result"></pre>
 
 <script>
-function sendRequest() {
+console.log("JS loaded");
+
+document.getElementById("btn").addEventListener("click", function () {
+    console.log("Button clicked");
+
     fetch("https://terrasense-ai.onrender.com/analyze", {
         method: "POST",
         headers: {
@@ -25,12 +25,21 @@ function sendRequest() {
             farm_size: 2
         })
     })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById("result").innerText = JSON.stringify(data, null, 2);
+    .then(res => {
+        console.log("Response received", res);
+        return res.json();
     })
-    .catch(err => console.error(err));
-}
+    .then(data => {
+        console.log("Data:", data);
+        document.getElementById("result").innerText =
+            JSON.stringify(data, null, 2);
+    })
+    .catch(err => {
+        console.error("Fetch error:", err);
+        document.getElementById("result").innerText =
+            "Error: " + err.message;
+    });
+});
 </script>
 
 </body>
