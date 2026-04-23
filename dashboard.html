@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <title>TerraSense Dashboard</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f7f6;
+            padding: 20px;
+        }
+
+
+    .container {
+        max-width: 600px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+    }
+
+    h2 {
+        text-align: center;
+        color: green;
+    }
+
+    label {
+        margin-top: 10px;
+        display: block;
+        font-weight: bold;
+    }
+
+    input, select, button {
+        width: 100%;
+        padding: 10px;
+        margin-top: 5px;
+    }
+
+    button {
+        background: green;
+        color: white;
+        border: none;
+        cursor: pointer;
+        margin-top: 15px;
+    }
+
+    .result {
+        margin-top: 20px;
+        padding: 10px;
+        background: #e8f5e9;
+    }
+</style>
+```
+
+</head>
+
+<body>
+
+<div class="container">
+    <h2>🌱 TerraSense Dashboard</h2>
+
+
+<label>Latitude</label>
+<input id="lat" type="number" value="7.38">
+
+<label>Longitude</label>
+<input id="lon" type="number" value="3.93">
+
+<label>Crop Type</label>
+<select id="crop">
+    <option>Maize</option>
+    <option>Rice</option>
+    <option>Cassava</option>
+    <option>Millet</option>
+</select>
+
+<label>Farm Size (hectares)</label>
+<input id="size" type="number" value="2">
+
+<button onclick="analyzeFarm()">Analyze Farm</button>
+
+<div id="result" class="result"></div>
+
+
+</div>
+
+<script>
+function analyzeFarm() {
+    var lat = document.getElementById("lat").value;
+    var lon = document.getElementById("lon").value;
+    var crop = document.getElementById("crop").value;
+    var size = document.getElementById("size").value;
+
+    fetch("https://terrasense-ai.onrender.com/analyze", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            lat: parseFloat(lat),
+            lon: parseFloat(lon),
+            crop: crop,
+            farm_size: parseFloat(size)
+        })
+    })
+    .then(function(res) {
+        return res.json();
+    })
+    .then(function(data) {
+        var output = "";
+        output += "<b>Status:</b> " + data.crop_status + "<br>";
+        output += "<b>Advice:</b> " + data.advice + "<br>";
+        output += "<b>Temperature:</b> " + data.temperature + "<br>";
+        output += "<b>Rain Forecast:</b> " + data.rain_forecast + "<br>";
+        output += "<b>NDVI:</b> " + data.ndvi + "<br>";
+        output += "<b>Vegetation:</b> " + data.vegetation_status + "<br>";
+        output += "<b>Water Saving:</b> " + data.ai_water_saving + "%<br>";
+        output += "<b>Carbon:</b> " + data.carbon + "<br>";
+        output += "<b>Climate Score:</b> " + data.climate_score + "<br>";
+
+        document.getElementById("result").innerHTML = output;
+    })
+    .catch(function(err) {
+        alert("Error: " + err);
+    });
+}
+</script>
+
+</body>
+</html>
