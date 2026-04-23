@@ -53,6 +53,7 @@
         padding: 10px;
     }
 </style>
+```
 
 </head>
 
@@ -61,8 +62,6 @@
 <div class="container">
 
 <h2>🌱 TerraSense</h2>
-
-<!-- FORM -->
 
 <label>Crop</label> <select id="crop"> <option>Maize</option> <option>Rice</option> <option>Cassava</option> <option>Millet</option> </select>
 
@@ -73,8 +72,6 @@
 <label>Irrigation Frequency</label> <select id="frequency"> <option>Rarely</option> <option>Weekly</option> <option>2-3 times/week</option> <option>Daily</option> </select>
 
 <p><b>Click map to select location</b></p>
-
-<!-- MAP -->
 
 <div id="map"></div>
 
@@ -88,20 +85,18 @@
 
 </div>
 
-<!-- Leaflet JS (IMPORTANT: must be after map div) -->
+<!-- Leaflet JS -->
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
-// Initialize map
+// Map setup
 var map = L.map('map').setView([7.38, 3.93], 6);
 
-// Add tiles
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 var marker;
 
-// Click to select location
 map.on('click', function(e) {
     var lat = e.latlng.lat;
     var lon = e.latlng.lng;
@@ -146,38 +141,41 @@ function analyzeFarm() {
     })
     .then(function(data) {
 
-    var rainMsg = "";
-    if (data.time_to_rain <= 3) {
-        rainMsg = "🌧 Rain expected within 3 hours";
-    } else if (data.time_to_rain <= 24) {
-        rainMsg = "🌧 Rain expected in " + data.time_to_rain + " hours";
-    } else {
-        rainMsg = "🌧 Rain expected in " + (data.time_to_rain/24).toFixed(1) + " days";
-    }
+        var rainMsg = "";
+        if (data.time_to_rain <= 3) {
+            rainMsg = "🌧 Rain expected within 3 hours";
+        } else if (data.time_to_rain <= 24) {
+            rainMsg = "🌧 Rain expected in " + data.time_to_rain + " hours";
+        } else {
+            rainMsg = "🌧 Rain expected in " + (data.time_to_rain/24).toFixed(1) + " days";
+        }
 
-    var output = "";
+        var output = "";
+        output += "<h3>" + data.icon + " " + data.crop_status + "</h3>";
+        output += "<b>Advice:</b> " + data.advice + "<br><br>";
 
-    output += "<h3>" + data.icon + " " + data.crop_status + "</h3>";
-    output += "<b>Advice:</b> " + data.advice + "<br><br>";
+        output += "<b>🌤 Season:</b> " + data.season + "<br>";
+        output += "<b>🌡 Temperature:</b> " + data.temperature + " °C<br>";
+        output += "<b>🌧 5-Day Rain:</b> " + data.rain_5days + " mm<br>";
+        output += rainMsg + "<br><br>";
 
-    output += "<b>🌤 Season:</b> " + data.season + "<br>";
-    output += "<b>🌡 Temperature:</b> " + data.temperature + " °C<br>";
-    output += "<b>🌧 5-Day Rain:</b> " + data.rain_5days + " mm<br>";
-    output += rainMsg + "<br><br>";
+        output += "<b>🌿 NDVI:</b> " + data.ndvi + "<br>";
+        output += data.vegetation_status + "<br><br>";
 
-    output += "<b>🌿 NDVI:</b> " + data.ndvi + "<br>";
-    output += data.vegetation_status + "<br><br>";
+        output += "<b>🤖 Water Saving:</b> " + data.water_saving + "%<br>";
 
-    output += "<b>🤖 Water Saving:</b> " + data.water_saving + "%<br>";
+        output += "<b>🌱 Carbon:</b> " + data.carbon + " tons CO₂<br>";
+        output += "<b>💰 Carbon Credits:</b> " + data.carbon_credits + "<br>";
+        output += "<b>💵 Value:</b> $" + data.carbon_value_usd + "<br><br>";
 
-    output += "<b>🌱 Carbon:</b> " + data.carbon + " tons CO₂<br>";
-    output += "<b>💰 Carbon Credits:</b> " + data.carbon_credits + "<br>";
-    output += "<b>💵 Value:</b> $" + data.carbon_value_usd + "<br><br>";
+        output += "<b>📊 Climate Score:</b> " + data.climate_score;
 
-    output += "<b>📊 Climate Score:</b> " + data.climate_score;
-
-    document.getElementById("result").innerHTML = output;
-})
+        document.getElementById("result").innerHTML = output;
+    })
+    .catch(function(err) {
+        alert("Error: " + err);
+    });
+}
 </script>
 
 </body>
