@@ -5,12 +5,29 @@
     <title>TerraSense</title>
 
 ```
-<!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
 <style>
     body { font-family: Arial; }
-    #map { height: 300px; margin: 10px 0; }
+
+    #map {
+        height: 400px;
+        width: 100%;
+        margin: 15px 0;
+        border: 2px solid #ccc;
+    }
+
+    input, select, button {
+        width: 100%;
+        padding: 10px;
+        margin: 6px 0;
+    }
+
+    .result {
+        margin-top: 10px;
+        background: #e8f5e9;
+        padding: 10px;
+    }
 </style>
 ```
 
@@ -20,11 +37,15 @@
 
 <h2>🌱 TerraSense</h2>
 
-<label>Crop</label> <select id="crop"> <option>Maize</option> <option>Rice</option> </select>
+<label>Crop</label> <select id="crop"> <option>Maize</option> <option>Rice</option> <option>Cassava</option> <option>Millet</option> </select>
 
 <label>Farm Size</label> <input id="size" value="2">
 
-<p>Click map to select location</p>
+<label>Irrigation Method</label> <select id="method"> <option>Rain-fed</option> <option>Manual (bucket)</option> <option>Small pump</option> <option>Large pump</option> </select>
+
+<label>Irrigation Frequency</label> <select id="frequency"> <option>Rarely</option> <option>Weekly</option> <option>2-3 times/week</option> <option>Daily</option> </select>
+
+<p><b>Click map to select location</b></p>
 
 <div id="map"></div>
 
@@ -33,20 +54,18 @@
 
 <button onclick="analyzeFarm()">Analyze</button>
 
-<div id="result"></div>
-
-<!-- Leaflet JS -->
+<div id="result" class="result"></div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
-// Test JS is running
-console.log("Script loaded");
 
-// Map
+// MAP
 var map = L.map('map').setView([7.38, 3.93], 6);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap contributors'
+}).addTo(map);
 
 var marker;
 
@@ -57,54 +76,73 @@ map.on('click', function(e) {
     document.getElementById("lat").value = lat;
     document.getElementById("lon").value = lon;
 
-    if (marker) {
-        map.removeLayer(marker);
-    }
-
+    if (marker) map.removeLayer(marker);
     marker = L.marker([lat, lon]).addTo(map);
 });
 
-// Analyze
+
+// ANALYZE
 function analyzeFarm() {
 
-    console.log("Button clicked");
-
     var lat = document.getElementById("lat").value;
+    var lon = document.getElementById("lon").value;
 
-    if (!lat) {
+    if (!lat || !lon) {
         alert("Select location first");
         return;
     }
-fetch("https://terrasense-ai.onrender.com/analyze", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-        lat: parseFloat(lat),
-        lon: parseFloat(lon),
-        crop: document.getElementById("crop").value,
-        farm_size: parseFloat(document.getElementById("size").value),
-        method: document.getElementById("method")?.value,
-        frequency: document.getElementById("frequency")?.value
+
+    fetch("https://terrasense-ai.onrender.com/analyze", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            lat: parseFloat(lat),
+            lon: parseFloat(lon),
+            crop: document.getElementById("crop").value,
+            farm_size: parseFloat(document.getElementById("size").value),
+            method: document.getElementById("method").value,
+            frequency: document.getElementById("frequency").value
+        })
     })
-})
-.then(res => res.json())
-.then(data => {
-    document.getElementById("result").innerHTML =
-        "<b>Status:</b> " + data.crop_status + "<br>" +
-        "<b>Advice:</b> " + data.advice + "<br>" +
-        "<b>Temperature:</b> " + data.temperature + "<br>" +
-        "<b>Rain (5 days):</b> " + data.rain_5days + "<br>" +
-        "<b>NDVI:</b> " + data.ndvi + "<br>" +
-        "<b>Water Saving:</b> " + data.water_saving + "%<br>" +
-        "<b>Carbon:</b> " + data.carbon + "<br>" +
-        "<b>Credits:</b> " + data.carbon_credits + "<br>" +
-        "<b>Value ($):</b> " + data.carbon_value_usd;
-})
-.catch(err => {
-    alert("Error: " + err);
-});
+    .then(res => res.json())
+    .then(data => {
+
+        var rainMsg = "";
+        if (data.time_to_rain <= 3) {
+            rainMsg = "🌧 Rain within 3 hours";
+        } else if (data.time_to_rain <= 24) {
+            rainMsg = "🌧 Rain in " + data.time_to_rain + " hrs";
+        } else {
+            rainMsg = "🌧 Rain in " + (data.time_to_rain/24).toFixed(1) + " days";
+        }
+
+        var output = "";
+
+        output += "<h3>" + data.icon + " " + data.crop_status + "</h3>";
+        output += "<b>Advice:</b> " + data.advice + "<br><br>";
+
+        output += "🌤 Season: " + data.season + "<br>";
+        output += "🌡 Temp: " + data.temperature + "°C<br>";
+        output += "🌧 Rain (5d): " + data.rain_5days + " mm<br>";
+        output += rainMsg + "<br><br>";
+
+        output += "🌿 NDVI: " + data.ndvi + "<br>";
+        output += data.vegetation_status + "<br><br>";
+
+        output += "🤖 Water Saving: " + data.water_saving + "%<br>";
+
+        output += "🌱 Carbon: " + data.carbon + " tons<br>";
+        output += "💰 Credits: " + data.carbon_credits + "<br>";
+        output += "💵 Value: $" + data.carbon_value_usd + "<br><br>";
+
+        output += "📊 Score: " + data.climate_score;
+
+        document.getElementById("result").innerHTML = output;
+    })
+    .catch(err => alert(err));
+}
 
 </script>
 
