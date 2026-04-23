@@ -2,10 +2,11 @@
 
 <html>
 <head>
-    <title>TerraSense Dashboard</title>
-git
+    <title>TerraSense</title>
+
+```
 <!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
     body {
@@ -15,111 +16,93 @@ git
     }
 
     .container {
-        max-width: 800px;
+        max-width: 700px;
         margin: auto;
         background: white;
         padding: 20px;
         border-radius: 10px;
     }
 
-    h2 {
-        text-align: center;
-        color: #2e7d32;
-    }
-
     #map {
         height: 300px;
-        margin-top: 15px;
-        border-radius: 8px;
+        margin: 15px 0;
+        border-radius: 6px;
+    }
+
+    label {
+        font-weight: bold;
     }
 
     input, select, button {
         width: 100%;
         padding: 10px;
-        margin-top: 10px;
+        margin: 8px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
     }
 
     button {
         background: #2e7d32;
         color: white;
         border: none;
-        cursor: pointer;
     }
 
     .result {
-        margin-top: 20px;
+        margin-top: 15px;
         background: #e8f5e9;
         padding: 10px;
-        border-radius: 8px;
     }
-
-    input, select {
-    width: 100%;
-    padding: 12px;
-    margin: 8px 0 15px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    background: #fff;
-    font-size: 14px;
-}
 </style>
+```
 
 </head>
 
 <body>
 
-
 <div class="container">
-    <h2>🌱 TerraSense Dashboard</h2>
 
+<h2>🌱 TerraSense</h2>
 
-<!-- FORM FIRST -->
-<label>Crop Type</label>
-<select id="crop">
-    <option>Maize</option>
-    <option>Rice</option>
-    <option>Cassava</option>
-    <option>Millet</option>
-</select>
+<!-- FORM -->
 
-<label>Farm Size (hectares)</label>
-<input id="size" type="number" value="2">
+<label>Crop</label> <select id="crop"> <option>Maize</option> <option>Rice</option> <option>Cassava</option> <option>Millet</option> </select>
 
-<p><b>Now click on the map to select your farm location</b></p>
+<label>Farm Size</label> <input id="size" type="number" value="2">
+
+<label>Irrigation Method</label> <select id="method"> <option>Rain-fed</option> <option>Manual (bucket)</option> <option>Small pump</option> <option>Large pump</option> </select>
+
+<label>Irrigation Frequency</label> <select id="frequency"> <option>Rarely</option> <option>Weekly</option> <option>2-3 times/week</option> <option>Daily</option> </select>
+
+<p><b>Click map to select location</b></p>
 
 <!-- MAP -->
+
 <div id="map"></div>
 
-<!-- COORDINATES (auto-filled) -->
-<label>Latitude</label>
-<input id="lat" readonly>
+<label>Latitude</label> <input id="lat" readonly>
 
-<label>Longitude</label>
-<input id="lon" readonly>
+<label>Longitude</label> <input id="lon" readonly>
 
-<!-- BUTTON -->
-<button onclick="analyzeFarm()">Analyze Farm</button>
+<button onclick="analyzeFarm()">Analyze</button>
 
-<!-- RESULT -->
 <div id="result" class="result"></div>
-
 
 </div>
 
-
-<!-- Leaflet JS -->
+<!-- Leaflet JS (IMPORTANT: must be after map div) -->
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
+// Initialize map
 var map = L.map('map').setView([7.38, 3.93], 6);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: 'Map data © OpenStreetMap'
-}).addTo(map);
+// Add tiles
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
 var marker;
 
+// Click to select location
 map.on('click', function(e) {
     var lat = e.latlng.lat;
     var lon = e.latlng.lng;
@@ -134,11 +117,16 @@ map.on('click', function(e) {
     marker = L.marker([lat, lon]).addTo(map);
 });
 
+// API call
 function analyzeFarm() {
+
     var lat = document.getElementById("lat").value;
     var lon = document.getElementById("lon").value;
-    var crop = document.getElementById("crop").value;
-    var size = document.getElementById("size").value;
+
+    if (!lat || !lon) {
+        alert("Please select location on map");
+        return;
+    }
 
     fetch("https://terrasense-ai.onrender.com/analyze", {
         method: "POST",
@@ -148,20 +136,29 @@ function analyzeFarm() {
         body: JSON.stringify({
             lat: parseFloat(lat),
             lon: parseFloat(lon),
-            crop: crop,
-            farm_size: parseFloat(size)
+            crop: document.getElementById("crop").value,
+            farm_size: parseFloat(document.getElementById("size").value),
+            method: document.getElementById("method").value,
+            frequency: document.getElementById("frequency").value
         })
     })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById("result").innerHTML =
-            "<b>Status:</b> " + data.crop_status + "<br>" +
-            "<b>Advice:</b> " + data.advice + "<br>" +
-            "<b>Temperature:</b> " + data.temperature + "<br>" +
-            "<b>NDVI:</b> " + data.ndvi + "<br>" +
-            "<b>Carbon:</b> " + data.carbon;
+    .then(function(res) {
+        return res.json();
     })
-    .catch(err => {
+    .then(function(data) {
+        var output = "";
+        output += "<b>Status:</b> " + data.crop_status + "<br>";
+        output += "<b>Advice:</b> " + data.advice + "<br>";
+        output += "<b>Temperature:</b> " + data.temperature + " °C<br>";
+        output += "<b>Rain (5 days):</b> " + data.rain_forecast_5days + "<br>";
+        output += "<b>NDVI:</b> " + data.ndvi + "<br>";
+        output += "<b>Water Saving:</b> " + data.water_saving + "%<br>";
+        output += "<b>Carbon Credits:</b> " + data.carbon_credits + "<br>";
+        output += "<b>Value ($):</b> " + data.carbon_value_usd;
+
+        document.getElementById("result").innerHTML = output;
+    })
+    .catch(function(err) {
         alert("Error: " + err);
     });
 }

@@ -7,34 +7,39 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # ---------------------------
-# FUNCTIONS
+# WEATHER
 # ---------------------------
-
 def get_weather_data(lat, lon):
-    url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,precipitation"
     try:
-        response = requests.get(url)
-        data = response.json()
-        return data["current"]["temperature_2m"], data["current"]["precipitation"]
+        url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current=temperature_2m,precipitation&daily=precipitation_sum"
+        data = requests.get(url).json()
+
+        temp = data["current"]["temperature_2m"]
+        rain_today = data["current"]["precipitation"]
+
+        forecast = data["daily"]["precipitation_sum"][:5]
+        total_forecast = sum(forecast)
+
+        return temp, rain_today, total_forecast
     except:
-        return None, None
+        return 30, 0, 0
 
-
-def estimate_ai_water_saving(rainfall, temperature, soil_moisture):
+# ---------------------------
+# LOGIC
+# ---------------------------
+def estimate_ai_water_saving(rainfall, temperature, soil):
     saving = 0
     if rainfall > 10:
         saving += 20
-    if soil_moisture > 0.6:
+    if soil > 0.6:
         saving += 30
     if temperature > 35:
         saving -= 10
     return max(0, min(saving, 50))
 
-
 def estimate_carbon(farm_size, crop):
     factors = {"Maize":0.6,"Rice":0.8,"Cassava":0.5,"Millet":0.4}
     return round(farm_size * factors.get(crop,0.5),2)
-
 
 def vegetation_health():
     ndvi = round(random.uniform(0.2,0.8),2)
@@ -44,37 +49,34 @@ def vegetation_health():
         return ndvi, "Moderate vegetation"
     return ndvi, "Poor vegetation"
 
-
-def estimate_water_usage(method, frequency, farm_size):
+# ---------------------------
+# CARBON CREDIT SYSTEM
+# ---------------------------
+def estimate_water_usage(method, freq, farm_size):
     base = {"Rain-fed":0,"Manual (bucket)":200,"Small pump":800,"Large pump":2000}
-    freq = {"Rarely":0.5,"Weekly":1,"2-3 times/week":2,"Daily":4}
-    return base.get(method,200) * freq.get(frequency,1) * farm_size
+    frequency = {"Rarely":0.5,"Weekly":1,"2-3 times/week":2,"Daily":4}
+    return base.get(method,200) * frequency.get(freq,1) * farm_size
 
-
-def map_to_pump_type(method):
+def pump_type(method):
     return {"Manual (bucket)":"manual","Small pump":"electric","Large pump":"diesel"}.get(method,"manual")
 
+def carbon_credits(method, freq, farm_size, reduction):
+    factors = {"diesel":2.68,"electric":0.5,"manual":0}
+    water = estimate_water_usage(method, freq, farm_size)
+    pump = pump_type(method)
 
-def calculate_carbon_credits(method, frequency, farm_size, reduction_percent):
-    factors = {"diesel":2.68,"electric":0.5,"manual":0.0}
-    water = estimate_water_usage(method, frequency, farm_size)
-    pump = map_to_pump_type(method)
-    saved = (water * reduction_percent/100) * factors[pump] / 1000
+    saved = (water * reduction/100) * factors[pump] / 1000
     credits = saved / 1000
-    return {
-        "water_usage": round(water,2),
-        "emission_savings": round(saved,2),
-        "carbon_credits": round(credits,4)
-    }
+    usd_value = credits * 10
+
+    return round(credits,4), round(usd_value,2)
 
 # ---------------------------
 # ROUTES
 # ---------------------------
-
 @app.route("/")
 def home():
     return "🌱 TerraSense API is running"
-
 
 @app.route("/analyze", methods=["POST"])
 def analyze():
@@ -86,82 +88,46 @@ def analyze():
         crop = data.get("crop", "Maize")
         farm_size = data.get("farm_size", 1)
 
-        temp, rain = get_weather_data(lat, lon)
+        method = data.get("method", "Manual (bucket)")
+        frequency = data.get("frequency", "Weekly")
 
-        # ✅ Prevent crash if API fails
-        if temp is None:
-            temp = 30
-        if rain is None:
-            rain = 0
+        temp, rain, forecast = get_weather_data(lat, lon)
 
-        humidity = random.randint(40, 80)
+        humidity = random.randint(40,80)
         soil = 0.6
 
         reduction = estimate_ai_water_saving(rain, temp, soil)
 
-        total_rain = (rain or 0) * 5
-
-        if total_rain < 5 and humidity < 60:
-            crop_status = "High Water Stress"
+        if forecast < 5 and humidity < 60:
+            status = "High Water Stress"
             advice = "Irrigate immediately"
-        elif total_rain < 10:
-            crop_status = "Moderate Water Stress"
+        elif forecast < 10:
+            status = "Moderate Water Stress"
             advice = "Irrigate within 2–3 days"
         else:
-            crop_status = "Healthy"
+            status = "Healthy"
             advice = "No irrigation needed"
 
-        ndvi, status = vegetation_health()
+        ndvi, veg = vegetation_health()
         carbon = estimate_carbon(farm_size, crop)
 
-        score = min(int((carbon * 10) + (total_rain * 2)), 100)
+        credits, usd = carbon_credits(method, frequency, farm_size, reduction)
 
         return jsonify({
-            "crop_status": crop_status,
+            "crop_status": status,
             "advice": advice,
-            "rain_forecast": total_rain,
             "temperature": temp,
-            "ai_water_saving": reduction,
+            "rain_forecast_5days": forecast,
             "ndvi": ndvi,
-            "vegetation_status": status,
+            "vegetation_status": veg,
+            "water_saving": reduction,
             "carbon": carbon,
-            "climate_score": score
+            "carbon_credits": credits,
+            "carbon_value_usd": usd
         })
 
     except Exception as e:
         return jsonify({"error": str(e)})
-
-
-@app.route("/carbon", methods=["POST"])
-def carbon():
-    try:
-        data = request.json or {}
-
-        method = data.get("method", "Manual (bucket)")
-        freq = data.get("frequency", "Weekly")
-        farm_size = data.get("farm_size", 1)
-
-        temp, rain = get_weather_data(7.38, 3.93)
-
-        if temp is None:
-            temp = 30
-        if rain is None:
-            rain = 0
-
-        soil = 0.5
-        reduction = estimate_ai_water_saving(rain, temp, soil)
-
-        result = calculate_carbon_credits(method, freq, farm_size, reduction)
-
-        return jsonify(result)
-
-    except Exception as e:
-        return jsonify({"error": str(e)})
-
-
-# ---------------------------
-# RUN
-# ---------------------------
 
 if __name__ == "__main__":
     app.run()
