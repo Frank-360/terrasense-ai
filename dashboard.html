@@ -25,7 +25,7 @@ body {
     box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
 }
 
-h2 {
+h2,h5 {
     text-align: center;
     color: #2e7d32;
 }
@@ -82,17 +82,38 @@ button:hover {
 </head>
 
 <body>
-<div class="container"></div>
+
+<div class="container">
 
 <h2>🌱 TerraSense</h2>
+<h5>The intelligence layer for modern farming</h5>
 
-<label>Crop</label> <select id="crop"> <option>Maize</option> <option>Rice</option> <option>Cassava</option> <option>Millet</option> </select>
+<label>Crop</label>
+<select id="crop">
+    <option>Maize</option>
+    <option>Rice</option>
+    <option>Cassava</option>
+    <option>Millet</option>
+</select>
 
-<label>Farm Size</label> <input id="size" value="2">
+<label>Farm Size</label>
+<input id="size" value="2">
 
-<label>Irrigation Method</label> <select id="method"> <option>Rain-fed</option> <option>Manual (bucket)</option> <option>Small pump</option> <option>Large pump</option> </select>
+<label>Irrigation Method</label>
+<select id="method">
+    <option>Rain-fed</option>
+    <option>Manual (bucket)</option>
+    <option>Small pump</option>
+    <option>Large pump</option>
+</select>
 
-<label>Irrigation Frequency</label> <select id="frequency"> <option>Rarely</option> <option>Weekly</option> <option>2-3 times/week</option> <option>Daily</option> </select>
+<label>Irrigation Frequency</label>
+<select id="frequency">
+    <option>Rarely</option>
+    <option>Weekly</option>
+    <option>2-3 times/week</option>
+    <option>Daily</option>
+</select>
 
 <p><b>Click map to select location</b></p>
 
@@ -104,6 +125,8 @@ button:hover {
 <button onclick="analyzeFarm()">Analyze</button>
 
 <div id="result" class="result"></div>
+
+</div> <!-- ✅ CLOSE CONTAINER HERE -->
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
