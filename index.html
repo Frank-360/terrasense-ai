@@ -2,16 +2,13 @@
 
 <html>
 <head>
-    <title>TerraSense</title>
+<title>TerraSense</title>
 
-
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
 <style>
-
 body {
- 
-   font-family: 'Segoe UI', Arial;
+    font-family: 'Segoe UI', Arial;
     background: #f4f7f6;
     padding: 20px;
 }
@@ -32,135 +29,114 @@ h2,h5 {
 
 #map {
     height: 400px;
-    width: 100%;
     margin: 15px 0;
     border-radius: 8px;
 }
 
 label {
     font-weight: 600;
-    margin-top: 10px;
-    display: block;
 }
 
 input, select {
     width: 100%;
-    padding: 12px;
+    padding: 10px;
     margin-top: 5px;
     border-radius: 6px;
     border: 1px solid #ccc;
-    font-size: 14px;
 }
 
 button {
     width: 100%;
     padding: 12px;
-    margin-top: 15px;
+    margin-top: 10px;
     background: #2e7d32;
     color: white;
     border: none;
     border-radius: 6px;
-    font-size: 16px;
     cursor: pointer;
-}
-
-button:hover {
-    background: #1b5e20;
 }
 
 .result {
     margin-top: 20px;
     padding: 15px;
-    background: #ffffff;
+    background: #fff;
     border-radius: 10px;
     box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
 }
-
-
 </style>
-
 
 </head>
 
 <body>
 
-<div class="container">  
+<div class="container">
 
 <h2>🌱 TerraSense</h2>
 <h5>The intelligence layer for modern farming</h5>
 
-<div style="display:flex; gap:15px; flex-wrap:wrap;">
+<div style="display:flex; gap:10px;">
+    <div style="flex:1;">
+        <label>Crop</label>
+        <select id="crop">
+            <option>Maize</option>
+            <option>Rice</option>
+            <option>Cassava</option>
+            <option>Millet</option>
+        </select>
+    </div>
 
-  <div style="flex:1;">
-    <label>Crop</label>
-    <select id="crop">
-      <option>Maize</option>
-      <option>Rice</option>
-      <option>Cassava</option>
-      <option>Millet</option>
-    </select>
-  </div>
-
-  <div style="flex:1;">
+```
+<div style="flex:1;">
     <label>Farm Size</label>
     <input id="size" value="2">
-  </div>
+</div>
+```
 
 </div>
 
-<div style="display:flex; gap:15px; flex-wrap:wrap;">
+<div style="display:flex; gap:10px;">
+    <div style="flex:1;">
+        <label>Irrigation Method</label>
+        <select id="method">
+            <option>Rain-fed</option>
+            <option>Manual (bucket)</option>
+            <option>Small pump</option>
+            <option>Large pump</option>
+        </select>
+    </div>
 
-  <div style="flex:1;">
-    <label>Irrigation Method</label>
-<select id="method">
-    <option>Rain-fed</option>
-    <option>Manual (bucket)</option>
-    <option>Small pump</option>
-    <option>Large pump</option>
-</select>
-  </div>
-
-<div style="display:flex; gap:15px; flex-wrap:wrap;">
-
-  <div style="flex:1;">
-
-<label>Irrigation Frequency</label>
-<select id="frequency">
-    <option>Rarely</option>
-    <option>Weekly</option>
-    <option>2-3 times/week</option>
-    <option>Daily</option>
-</select>
+```
+<div style="flex:1;">
+    <label>Irrigation Frequency</label>
+    <select id="frequency">
+        <option>Rarely</option>
+        <option>Weekly</option>
+        <option>2-3 times/week</option>
+        <option>Daily</option>
+    </select>
+</div>
+```
 
 </div>
 
-<!-- ✅ GPS BUTTON (correct place) -->
-
-<button onclick="getLocation()" style="background:#0288d1; color:white;">
-    📍 Use My Location
-</button>
+<button onclick="getLocation()" style="background:#0288d1;">📍 Use My Location</button>
 
 <p style="text-align:center;">OR</p>
 
-<p><b>Click map to select location</b></p>
-
 <div id="map"></div>
 
-<input id="lat" placeholder="Latitude" readonly>
-<input id="lon" placeholder="Longitude" readonly>
+<input id="lat" readonly placeholder="Latitude">
+<input id="lon" readonly placeholder="Longitude">
 
 <button onclick="analyzeFarm()">Analyze</button>
 
 <div id="result" class="result"></div>
 
-</div> <!-- CLOSE CONTAINER -->
+</div>
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-
-
 <script>
-document.addEventListener("DOMContentLoaded", function() {
 
 // MAP
 var map = L.map('map').setView([7.38, 3.93], 6);
@@ -171,131 +147,89 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 var marker;
 
-// Click to select
+// Click map
 map.on('click', function(e) {
-    var lat = e.latlng.lat;
-    var lon = e.latlng.lng;
+    updateLocation(e.latlng.lat, e.latlng.lng);
+});
 
+// Shared update function
+function updateLocation(lat, lon){
     document.getElementById("lat").value = lat;
     document.getElementById("lon").value = lon;
 
     if (marker) map.removeLayer(marker);
     marker = L.marker([lat, lon]).addTo(map);
-});
 
-// GPS FUNCTION
+    map.setView([lat, lon], 13);
+}
+
+// GPS
 function getLocation() {
-
     if (!navigator.geolocation) {
         alert("Geolocation not supported");
         return;
     }
 
     navigator.geolocation.getCurrentPosition(
-        function(position) {
-
-            var lat = position.coords.latitude;
-            var lon = position.coords.longitude;
-
-            document.getElementById("lat").value = lat;
-            document.getElementById("lon").value = lon;
-
-            map.setView([lat, lon], 13);
-
-            if (marker) map.removeLayer(marker);
-            marker = L.marker([lat, lon]).addTo(map);
-
-            // ✅ AUTO ANALYZE
-            analyzeFarm();
-
+        pos => {
+            updateLocation(pos.coords.latitude, pos.coords.longitude);
+            setTimeout(analyzeFarm, 300); // safe auto-run
         },
-        function(error) {
-            alert("Location access denied or unavailable");
-        }
+        () => alert("Location denied")
     );
 }
 
-
 // ANALYZE
-function analyzeFarm() {
+function analyzeFarm(){
 
-    var lat = document.getElementById("lat").value;
-    var lon = document.getElementById("lon").value;
+    const lat = document.getElementById("lat").value;
+    const lon = document.getElementById("lon").value;
 
-    if (!lat || !lon) {
+    if(!lat || !lon){
         alert("Select location first");
         return;
     }
 
-    document.getElementById("result").innerHTML = "⏳ Analyzing farm...";
+    document.getElementById("result").innerHTML = "⏳ Analyzing...";
 
     fetch("https://terrasense-ai.onrender.com/analyze", {
-    method: "POST",
-    headers: {
-        "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-        lat: parseFloat(lat),
-        lon: parseFloat(lon),
-        crop: document.getElementById("crop").value,
-        farm_size: parseFloat(document.getElementById("size").value),
-        method: document.getElementById("method").value,
-        frequency: document.getElementById("frequency").value
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({
+            lat: parseFloat(lat),
+            lon: parseFloat(lon),
+            crop: document.getElementById("crop").value,
+            farm_size: parseFloat(document.getElementById("size").value),
+            method: document.getElementById("method").value,
+            frequency: document.getElementById("frequency").value
+        })
     })
-})
-.then(res => {
-    if (!res.ok) {
-        throw new Error("Server error: " + res.status);
-    }
-    return res.json();
-})
-.then(data => {
+    .then(r => r.json())
+    .then(data => {
 
-    if (!data || data.error) {
-        document.getElementById("result").innerHTML =
-            "❌ Server error: " + (data?.error || "Invalid response");
-        return;
-    }
+        let output = `
+        <h4>🌱 Farm Insights</h4>
+        <h3>${data.icon} ${data.crop_status}</h3>
+        <p><b>Advice:</b> ${data.advice}</p>
+        <hr>
+        🌡 ${data.temperature}°C <br>
+        🌧 ${data.rain_5days} mm <br>
+        🌿 NDVI: ${data.ndvi} <br>
+        🤖 Water Saving: ${data.water_saving}% <br>
+        🌱 Carbon: ${data.carbon} <br>
+        💰 Credits: ${data.carbon_credits} <br>
+        💵 $${data.carbon_value_usd}
+        `;
 
-    var rainMsg = "";
-    if (data.time_to_rain <= 3) {
-        rainMsg = "🌧 Rain within 3 hours";
-    } else if (data.time_to_rain <= 24) {
-        rainMsg = "🌧 Rain in " + data.time_to_rain + " hrs";
-    } else {
-        rainMsg = "🌧 Rain in " + (data.time_to_rain/24).toFixed(1) + " days";
-    }
+        document.getElementById("result").innerHTML = output;
 
-    var output = "";
-    output += "<h4 style='color:#2e7d32'>🌱 Farm Insights</h4>";
-    output += "<h3 style='color:#2e7d32'>" + data.icon + " " + data.crop_status + "</h3>";
-    output += "<p><b>Advice:</b> " + data.advice + "</p>";
-    output += "<hr>";
-    output += "🌤 <b>Season:</b> " + data.season + "<br>";
-    output += "🌡 <b>Temperature:</b> " + data.temperature + "°C<br>";
-    output += "🌧 <b>Rain (5d):</b> " + data.rain_5days + " mm<br>";
-    output += rainMsg + "<br><br>";
-    output += "🌿 <b>NDVI:</b> " + data.ndvi + "<br>";
-    output += data.vegetation_status + "<br><br>";
-    output += "🤖 <b>Water Saving:</b> " + data.water_saving + "%<br>";
-    output += "🌱 <b>Carbon:</b> " + data.carbon + " tons<br>";
-    output += "💰 <b>Credits:</b> " + data.carbon_credits + "<br>";
-    output += "💵 <b>Value:</b> $" + data.carbon_value_usd + "<br><br>";
-    output += "📊 <b>Climate Score:</b> " + data.climate_score;
-
-    document.getElementById("result").innerHTML = output;
-})
-.catch(err => {
-    console.error(err);
-    document.getElementById("result").innerHTML =
-        "❌ Failed to analyze farm. Check connection or server.";
-});
+    })
+    .catch(()=>{
+        document.getElementById("result").innerHTML = "❌ Server error";
+    });
 }
 
-});
 </script>
-
-</div>
 
 </body>
 </html>
