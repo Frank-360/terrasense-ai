@@ -71,10 +71,11 @@ button:hover {
 .result {
     margin-top: 20px;
     padding: 15px;
-    background: #e8f5e9;
-    border-radius: 8px;
-    line-height: 1.6;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
 }
+
 
 </style>
 
@@ -90,32 +91,60 @@ button:hover {
 <h2>🌱 TerraSense</h2>
 <h5>The intelligence layer for modern farming</h5>
 
-<label>Crop</label>
-<select id="crop">
-    <option>Maize</option>
-    <option>Rice</option>
-    <option>Cassava</option>
-    <option>Millet</option>
-</select>
+<div style="display:flex; gap:15px; flex-wrap:wrap;">
 
-<label>Farm Size</label>
-<input id="size" value="2">
+  <div style="flex:1;">
+    <label>Crop</label>
+    <select id="crop">
+      <option>Maize</option>
+      <option>Rice</option>
+      <option>Cassava</option>
+      <option>Millet</option>
+    </select>
+  </div>
+
+  <div style="flex:1;">
+    <label>Farm Size</label>
+    <input id="size" value="2">
+  </div>
+
+</div>
+
+
+
 
 <label>Irrigation Method</label>
 <select id="method">
-    <option>Rain-fed</option>
-    <option>Manual (bucket)</option>
-    <option>Small pump</option>
-    <option>Large pump</option>
+    
 </select>
 
-<label>Irrigation Frequency</label>
-<select id="frequency">
-    <option>Rarely</option>
-    <option>Weekly</option>
-    <option>2-3 times/week</option>
-    <option>Daily</option>
-</select>
+
+<div style="display:flex; gap:15px; flex-wrap:wrap;">
+
+  <div style="flex:1;">
+    <label>Irrigation Method</label>
+    <select id="Method">
+      <option>Rain-fed</option>
+        <option>Manual (bucket)</option>
+        <option>Small pump</option>
+        <option>Large pump</option>
+    </select>
+  </div>
+
+</div>
+
+<div style="display:flex; gap:15px; flex-wrap:wrap;">
+
+  <div style="flex:1;">
+    <label>Irrigation Frequency</label>
+    <select id="Frequency">
+      <option>Rarely</option>
+        <option>Weekly</option>
+        <option>2-3 times/week</option>
+        <option>Daily</option>
+    </select>
+  </div>
+
 
 <p><b>Click map to select location</b></p>
 
@@ -135,6 +164,11 @@ button:hover {
 <script>
 
 // MAP
+
+<button onclick="getLocation()" style="background:#0288d1;">
+    📍 Use My Location
+</button>
+
 var map = L.map('map').setView([7.38, 3.93], 6);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -154,6 +188,40 @@ map.on('click', function(e) {
     marker = L.marker([lat, lon]).addTo(map);
 });
 
+function getLocation() {
+
+    if (!navigator.geolocation) {
+        alert("Geolocation not supported");
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+
+            var lat = position.coords.latitude;
+            var lon = position.coords.longitude;
+
+            // Fill inputs
+            document.getElementById("lat").value = lat;
+            document.getElementById("lon").value = lon;
+
+            // Move map
+            map.setView([lat, lon], 13);
+
+            // Add marker
+            if (marker) {
+                map.removeLayer(marker);
+            }
+
+            marker = L.marker([lat, lon]).addTo(map);
+
+        },
+        function(error) {
+            alert("Location access denied or unavailable");
+        }
+    );
+}
+
 
 // ANALYZE
 function analyzeFarm() {
@@ -165,6 +233,8 @@ function analyzeFarm() {
         alert("Select location first");
         return;
     }
+
+    document.getElementById("result").innerHTML = "⏳ Analyzing farm...";
 
     fetch("https://terrasense-ai.onrender.com/analyze", {
         method: "POST",
@@ -191,8 +261,10 @@ function analyzeFarm() {
         } else {
             rainMsg = "🌧 Rain in " + (data.time_to_rain/24).toFixed(1) + " days";
         }
+        
 
         var output = "";
+output += "<h4 style='color:#2e7d32'>🌱 Farm Insights</h4>";
 
 output += "<h3 style='color:#2e7d32'>" + data.icon + " " + data.crop_status + "</h3>";
 
