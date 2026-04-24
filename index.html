@@ -206,30 +206,77 @@ function analyzeFarm(){
     })
     .then(r => r.json())
     .then(data => {
+    
+        if (!data) {
+        document.getElementById("result").innerHTML = "❌ Invalid response";
+        return;
+    }
 
-        let output = `
-        <h4>🌱 Farm Insights</h4>
-        <h3>${data.icon} ${data.crop_status}</h3>
-        <p><b>Advice:</b> ${data.advice}</p>
-        <hr>
-        🌡 ${data.temperature}°C <br>
-        🌧 ${data.rain_5days} mm <br>
-        🌿 NDVI: ${data.ndvi} <br>
-        🤖 Water Saving: ${data.water_saving}% <br>
-        🌱 Carbon: ${data.carbon} <br>
-        💰 Credits: ${data.carbon_credits} <br>
-        💵 $${data.carbon_value_usd}
-        `;
+    const status = data.crop_status || "Unknown";
 
-        document.getElementById("result").innerHTML = output;
+    let statusColor = "#2e7d32"; // green
+    if (status.includes("Moderate")) statusColor = "#f9a825"; // amber
+    if (status.includes("High")) statusColor = "#c62828"; // red
 
-    })
-    .catch(()=>{
-        document.getElementById("result").innerHTML = "❌ Server error";
-    });
-}
+    let explanation = "No data available.";
 
-</script>
+    if (status === "Healthy") {
+        explanation = "Your crops are in good condition with sufficient moisture and growth.";
+    } 
+    else if (status.includes("Moderate")) {
+        explanation = "Your crops are beginning to experience water stress. Early intervention can prevent yield loss.";
+    } 
+    else if (status.includes("High")) {
+        explanation = "Your crops are under significant stress due to lack of water. Immediate action is required.";
+    }
 
-</body>
-</html>
+    let output = `
+    <div style="padding:15px">
+
+    <h3 style="color:${statusColor}; margin-bottom:5px;">
+    ${data.icon || "🌱"} ${status}
+    </h3>
+
+    <p style="font-size:14px; color:#555;">
+    ${explanation}
+    </p>
+
+    <div style="background:#e8f5e9; padding:12px; border-radius:8px; margin:10px 0;">
+    <b>🌱 Recommended Action:</b><br>
+    ${data.advice || "No recommendation available"}
+    </div>
+
+    <hr>
+
+    <h4>📊 Farm Data</h4>
+
+    <p>🌡 Temperature: <b>${data.temperature ?? "-"}°C</b></p>
+    <p>🌧 Rain (5 days): <b>${data.rain_5days ?? "-"} mm</b></p>
+    <p>🌿 Vegetation (NDVI): <b>${data.ndvi ?? "-"}</b> – ${data.vegetation_status || ""}</p>
+
+    <hr>
+
+    <h4>💧 Efficiency & Climate Impact</h4>
+
+    <p>🤖 Water Saving: <b>${data.water_saving ?? 0}%</b></p>
+    <p>🌱 Carbon Stored: <b>${data.carbon ?? 0} tons</b></p>
+    <p>💰 Carbon Credits: <b>${data.carbon_credits ?? 0}</b></p>
+    <p>💵 Estimated Value: <b>$${data.carbon_value_usd ?? 0}</b></p>
+
+    <hr>
+
+    <h4>📈 Climate Score</h4>
+    <p style="font-size:18px;"><b>${data.climate_score ?? 0}/100</b></p>
+
+    </div>
+    `;
+
+    document.getElementById("result").innerHTML = output;
+})
+.catch(()=>{
+    document.getElementById("result").innerHTML = "❌ Server error";
+});
+
+    </script>
+    </body>
+    </html>
