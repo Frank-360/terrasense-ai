@@ -229,60 +229,66 @@ function analyzeFarm() {
     document.getElementById("result").innerHTML = "⏳ Analyzing farm...";
 
     fetch("https://terrasense-ai.onrender.com/analyze", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            lat: parseFloat(lat),
-            lon: parseFloat(lon),
-            crop: document.getElementById("crop").value,
-            farm_size: parseFloat(document.getElementById("size").value),
-            method: document.getElementById("method").value,
-            frequency: document.getElementById("frequency").value
-        })
+    method: "POST",
+    headers: {
+        "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+        lat: parseFloat(lat),
+        lon: parseFloat(lon),
+        crop: document.getElementById("crop").value,
+        farm_size: parseFloat(document.getElementById("size").value),
+        method: document.getElementById("method").value,
+        frequency: document.getElementById("frequency").value
     })
-    .then(res => res.json())
-    .then(data => {
+})
+.then(res => {
+    if (!res.ok) {
+        throw new Error("Server error: " + res.status);
+    }
+    return res.json();
+})
+.then(data => {
 
-        var rainMsg = "";
-        if (data.time_to_rain <= 3) {
-            rainMsg = "🌧 Rain within 3 hours";
-        } else if (data.time_to_rain <= 24) {
-            rainMsg = "🌧 Rain in " + data.time_to_rain + " hrs";
-        } else {
-            rainMsg = "🌧 Rain in " + (data.time_to_rain/24).toFixed(1) + " days";
-        }
-        
+    if (!data || data.error) {
+        document.getElementById("result").innerHTML =
+            "❌ Server error: " + (data?.error || "Invalid response");
+        return;
+    }
 
-        var output = "";
-output += "<h4 style='color:#2e7d32'>🌱 Farm Insights</h4>";
+    var rainMsg = "";
+    if (data.time_to_rain <= 3) {
+        rainMsg = "🌧 Rain within 3 hours";
+    } else if (data.time_to_rain <= 24) {
+        rainMsg = "🌧 Rain in " + data.time_to_rain + " hrs";
+    } else {
+        rainMsg = "🌧 Rain in " + (data.time_to_rain/24).toFixed(1) + " days";
+    }
 
-output += "<h3 style='color:#2e7d32'>" + data.icon + " " + data.crop_status + "</h3>";
+    var output = "";
+    output += "<h4 style='color:#2e7d32'>🌱 Farm Insights</h4>";
+    output += "<h3 style='color:#2e7d32'>" + data.icon + " " + data.crop_status + "</h3>";
+    output += "<p><b>Advice:</b> " + data.advice + "</p>";
+    output += "<hr>";
+    output += "🌤 <b>Season:</b> " + data.season + "<br>";
+    output += "🌡 <b>Temperature:</b> " + data.temperature + "°C<br>";
+    output += "🌧 <b>Rain (5d):</b> " + data.rain_5days + " mm<br>";
+    output += rainMsg + "<br><br>";
+    output += "🌿 <b>NDVI:</b> " + data.ndvi + "<br>";
+    output += data.vegetation_status + "<br><br>";
+    output += "🤖 <b>Water Saving:</b> " + data.water_saving + "%<br>";
+    output += "🌱 <b>Carbon:</b> " + data.carbon + " tons<br>";
+    output += "💰 <b>Credits:</b> " + data.carbon_credits + "<br>";
+    output += "💵 <b>Value:</b> $" + data.carbon_value_usd + "<br><br>";
+    output += "📊 <b>Climate Score:</b> " + data.climate_score;
 
-output += "<p><b>Advice:</b> " + data.advice + "</p>";
-
-output += "<hr>";
-
-output += "🌤 <b>Season:</b> " + data.season + "<br>";
-output += "🌡 <b>Temperature:</b> " + data.temperature + "°C<br>";
-output += "🌧 <b>Rain (5d):</b> " + data.rain_5days + " mm<br>";
-output += rainMsg + "<br><br>";
-
-output += "🌿 <b>NDVI:</b> " + data.ndvi + "<br>";
-output += data.vegetation_status + "<br><br>";
-
-output += "🤖 <b>Water Saving:</b> " + data.water_saving + "%<br>";
-
-output += "🌱 <b>Carbon:</b> " + data.carbon + " tons<br>";
-output += "💰 <b>Credits:</b> " + data.carbon_credits + "<br>";
-output += "💵 <b>Value:</b> $" + data.carbon_value_usd + "<br><br>";
-
-output += "📊 <b>Climate Score:</b> " + data.climate_score;
-
-document.getElementById("result").innerHTML = output;
-    })
-    .catch(err => alert(err));
+    document.getElementById("result").innerHTML = output;
+})
+.catch(err => {
+    console.error(err);
+    document.getElementById("result").innerHTML =
+        "❌ Failed to analyze farm. Check connection or server.";
+});
 }
 </script>
 </div>
