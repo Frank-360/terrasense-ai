@@ -112,29 +112,27 @@ button:hover {
 
   <div style="flex:1;">
     <label>Irrigation Method</label>
-    <select id="Method">
-      <option>Rain-fed</option>
-        <option>Manual (bucket)</option>
-        <option>Small pump</option>
-        <option>Large pump</option>
-    </select>
+<select id="method">
+    <option>Rain-fed</option>
+    <option>Manual (bucket)</option>
+    <option>Small pump</option>
+    <option>Large pump</option>
+</select>
   </div>
-
-</div>
 
 <div style="display:flex; gap:15px; flex-wrap:wrap;">
 
   <div style="flex:1;">
-    <label>Irrigation Frequency</label>
-    <select id="Frequency">
-      <option>Rarely</option>
-        <option>Weekly</option>
-        <option>2-3 times/week</option>
-        <option>Daily</option>
-    </select>
-  </div>
 
+<label>Irrigation Frequency</label>
+<select id="frequency">
+    <option>Rarely</option>
+    <option>Weekly</option>
+    <option>2-3 times/week</option>
+    <option>Daily</option>
+</select>
 
+</div>
 
 <!-- ✅ GPS BUTTON (correct place) -->
 
@@ -159,7 +157,10 @@ button:hover {
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
+
+
 <script>
+document.addEventListener("DOMContentLoaded", function() {
 
 // MAP
 var map = L.map('map').setView([7.38, 3.93], 6);
@@ -290,7 +291,10 @@ function analyzeFarm() {
         "❌ Failed to analyze farm. Check connection or server.";
 });
 }
+
+});
 </script>
+
 </div>
 
 </body>
