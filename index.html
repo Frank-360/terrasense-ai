@@ -145,6 +145,14 @@ button:hover {
     </select>
   </div>
 
+<p><b>Select location:</b></p>
+
+<!-- ✅ GPS BUTTON (correct place) -->
+<button onclick="getLocation()" style="background:#0288d1; color:white;">
+    📍 Use My Location
+</button>
+
+<p style="text-align:center;">OR</p>
 
 <p><b>Click map to select location</b></p>
 
@@ -157,18 +165,13 @@ button:hover {
 
 <div id="result" class="result"></div>
 
-</div> <!-- ✅ CLOSE CONTAINER HERE -->
+</div> <!-- CLOSE CONTAINER -->
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
 
 // MAP
-
-<button onclick="getLocation()" style="background:#0288d1;">
-    📍 Use My Location
-</button>
-
 var map = L.map('map').setView([7.38, 3.93], 6);
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -177,6 +180,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 
 var marker;
 
+// Click to select
 map.on('click', function(e) {
     var lat = e.latlng.lat;
     var lon = e.latlng.lng;
@@ -188,6 +192,7 @@ map.on('click', function(e) {
     marker = L.marker([lat, lon]).addTo(map);
 });
 
+// GPS FUNCTION
 function getLocation() {
 
     if (!navigator.geolocation) {
@@ -201,18 +206,12 @@ function getLocation() {
             var lat = position.coords.latitude;
             var lon = position.coords.longitude;
 
-            // Fill inputs
             document.getElementById("lat").value = lat;
             document.getElementById("lon").value = lon;
 
-            // Move map
             map.setView([lat, lon], 13);
 
-            // Add marker
-            if (marker) {
-                map.removeLayer(marker);
-            }
-
+            if (marker) map.removeLayer(marker);
             marker = L.marker([lat, lon]).addTo(map);
 
         },
@@ -221,6 +220,9 @@ function getLocation() {
         }
     );
 }
+
+</script>
+
 
 
 // ANALYZE
