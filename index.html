@@ -204,12 +204,16 @@ function getLocation() {
             if (marker) map.removeLayer(marker);
             marker = L.marker([lat, lon]).addTo(map);
 
+            // ✅ AUTO ANALYZE
+            analyzeFarm();
+
         },
         function(error) {
             alert("Location access denied or unavailable");
         }
     );
 }
+
 
 // ANALYZE
 function analyzeFarm() {
