@@ -4,36 +4,85 @@
 <head>
     <title>TerraSense</title>
 
-```
+
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 
 <style>
-    body { font-family: Arial; }
 
-    #map {
-        height: 400px;
-        width: 100%;
-        margin: 15px 0;
-        border: 2px solid #ccc;
-    }
+body {
+ 
+   font-family: 'Segoe UI', Arial;
+    background: #f4f7f6;
+    padding: 20px;
+}
 
-    input, select, button {
-        width: 100%;
-        padding: 10px;
-        margin: 6px 0;
-    }
+.container {
+    max-width: 750px;
+    margin: auto;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0px 4px 15px rgba(0,0,0,0.1);
+}
 
-    .result {
-        margin-top: 10px;
-        background: #e8f5e9;
-        padding: 10px;
-    }
+h2 {
+    text-align: center;
+    color: #2e7d32;
+}
+
+#map {
+    height: 400px;
+    width: 100%;
+    margin: 15px 0;
+    border-radius: 8px;
+}
+
+label {
+    font-weight: 600;
+    margin-top: 10px;
+    display: block;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 15px;
+    background: #2e7d32;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1b5e20;
+}
+
+.result {
+    margin-top: 20px;
+    padding: 15px;
+    background: #e8f5e9;
+    border-radius: 8px;
+    line-height: 1.6;
+}
+
 </style>
-```
+
 
 </head>
 
 <body>
+<div class="container"></div>
 
 <h2>🌱 TerraSense</h2>
 
@@ -120,31 +169,36 @@ function analyzeFarm() {
 
         var output = "";
 
-        output += "<h3>" + data.icon + " " + data.crop_status + "</h3>";
-        output += "<b>Advice:</b> " + data.advice + "<br><br>";
+output += "<h3 style='color:#2e7d32'>" + data.icon + " " + data.crop_status + "</h3>";
 
-        output += "🌤 Season: " + data.season + "<br>";
-        output += "🌡 Temp: " + data.temperature + "°C<br>";
-        output += "🌧 Rain (5d): " + data.rain_5days + " mm<br>";
-        output += rainMsg + "<br><br>";
+output += "<p><b>Advice:</b> " + data.advice + "</p>";
 
-        output += "🌿 NDVI: " + data.ndvi + "<br>";
-        output += data.vegetation_status + "<br><br>";
+output += "<hr>";
 
-        output += "🤖 Water Saving: " + data.water_saving + "%<br>";
+output += "🌤 <b>Season:</b> " + data.season + "<br>";
+output += "🌡 <b>Temperature:</b> " + data.temperature + "°C<br>";
+output += "🌧 <b>Rain (5d):</b> " + data.rain_5days + " mm<br>";
+output += rainMsg + "<br><br>";
 
-        output += "🌱 Carbon: " + data.carbon + " tons<br>";
-        output += "💰 Credits: " + data.carbon_credits + "<br>";
-        output += "💵 Value: $" + data.carbon_value_usd + "<br><br>";
+output += "🌿 <b>NDVI:</b> " + data.ndvi + "<br>";
+output += data.vegetation_status + "<br><br>";
 
-        output += "📊 Score: " + data.climate_score;
+output += "🤖 <b>Water Saving:</b> " + data.water_saving + "%<br>";
 
-        document.getElementById("result").innerHTML = output;
+output += "🌱 <b>Carbon:</b> " + data.carbon + " tons<br>";
+output += "💰 <b>Credits:</b> " + data.carbon_credits + "<br>";
+output += "💵 <b>Value:</b> $" + data.carbon_value_usd + "<br><br>";
+
+output += "📊 <b>Climate Score:</b> " + data.climate_score;
+
+document.getElementById("result").innerHTML = output;
     })
     .catch(err => alert(err));
 }
 
 </script>
+
+</div>
 
 </body>
 </html>
